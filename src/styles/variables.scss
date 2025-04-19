@@ -1,0 +1,22 @@
+// src/styles/variables.scss
+// 响应式断点
+$breakpoints: (
+  mobile: 0,
+  tablet: 768px,
+  desktop: 1024px,
+);
+
+// 间距系统
+$gutter-sm: 1rem;
+$gutter-md: 1.5rem;
+$gutter-lg: 2rem;
+
+// 字体系统
+$font-size-sm: 14px;
+$font-size-base: 16px;
+$font-size-lg: 18px;
+
+// 颜色系统
+$primary-color: #409eff;
+$text-color-dark: #303133;
+$text-color-light: #ffffff;
