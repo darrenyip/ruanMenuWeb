@@ -24,13 +24,123 @@ const getTodayCondition = () => {
 }
 
 /**
+ * 根据菜单类型获取对应的名称
+ */
+const getMenuNameByType = (type: MenuType): string => {
+  switch (type) {
+    case 'lunch':
+      return '午餐'
+    case 'dinner':
+      return '晚餐'
+    case 'other':
+      return '其他'
+    default:
+      return '其他'
+  }
+}
+
+/**
  * 菜单API
  */
 export const menuApi = {
   /**
+   * 创建新菜单
+   * @param date 日期，格式为YYYY-MM-DD
+   * @param type 菜单类型：lunch(午餐), dinner(晚餐), other(其他-包含炖汤/主食/饮料)
+   * @returns 创建的菜单数据
+   */
+  createMenu: async (date: string, type: MenuType) => {
+    try {
+      // 根据类型设置对应的名称
+      const name = getMenuNameByType(type)
+
+      // 格式化日期 - 确保符合 ISO 格式
+      const dateObj = new Date(date)
+      const isoDate = dateObj.toISOString()
+
+      // 创建菜单记录 - 按照PocketBase示例格式
+      const data = {
+        name: name,
+        type: type,
+        date: isoDate,
+      }
+
+      console.log('创建菜单数据:', data)
+      const createdMenu = await pb.collection('menus').create(data)
+      return createdMenu
+    } catch (error) {
+      console.error('创建菜单失败:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 获取或创建菜单
+   * @param date 日期，格式为YYYY-MM-DD
+   * @param type 菜单类型：lunch(午餐), dinner(晚餐), other(其他-包含炖汤/主食/饮料)
+   * @returns 获取到的或创建的菜单数据
+   */
+  getOrCreateMenu: async (date: string, type: MenuType) => {
+    try {
+      // 将日期转换为开始和结束时间以便匹配
+      const dateObj = new Date(date)
+      dateObj.setHours(0, 0, 0, 0)
+      const startDate = dateObj.toISOString()
+
+      dateObj.setHours(23, 59, 59, 999)
+      const endDate = dateObj.toISOString()
+
+      console.log(`查询菜单条件: date >= '${startDate}' && date <= '${endDate}' && type='${type}'`)
+
+      // 查找当天指定类型的菜单
+      const menuList = await pb.collection('menus').getList(1, 1, {
+        filter: `date >= '${startDate}' && date <= '${endDate}' && type='${type}'`,
+      })
+
+      console.log(`查询结果: 找到 ${menuList.items.length} 个菜单`)
+
+      // 如果找到菜单则返回，否则创建新菜单
+      if (menuList.items.length > 0) {
+        return menuList.items[0]
+      } else {
+        return await menuApi.createMenu(date, type)
+      }
+    } catch (error) {
+      console.error(`获取或创建菜单失败:`, error)
+      throw error
+    }
+  },
+
+  /**
+   * 创建菜单项
+   * @param date 日期，格式为YYYY-MM-DD
+   * @param type 菜单类型：lunch(午餐), dinner(晚餐), other(其他-包含炖汤/主食/饮料)
+   * @param dishId 菜品ID
+   * @returns 创建的菜单项数据
+   */
+  createMenuItem: async (date: string, type: MenuType, dishId: string) => {
+    try {
+      // 获取或创建菜单
+      const menu = await menuApi.getOrCreateMenu(date, type)
+
+      // 创建菜单项 - 按照PocketBase示例格式
+      const data = {
+        menu: menu.id,
+        dish: dishId,
+      }
+
+      const createdMenuItem = await pb.collection('menu_items').create(data)
+      return createdMenuItem
+    } catch (error) {
+      console.error('创建菜单项失败:', error)
+      throw error
+    }
+  },
+
+  /**
    * 获取指定日期和类型的菜单
    * @param date 日期，格式为YYYY-MM-DD
-   * @param type 菜单类型：lunch, dinner, soup
+   * @param type 菜单类型：lunch(午餐), dinner(晚餐), other(其他-包含炖汤/主食/饮料)
    * @returns 格式化的菜单数据
    */
   fetchMenu: async (date: string, type: MenuType): Promise<FormattedMenu> => {

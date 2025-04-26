@@ -14,7 +14,7 @@
       <el-radio-group v-model="currentMealType">
         <el-radio-button label="lunch">午餐</el-radio-button>
         <el-radio-button label="dinner">晚餐</el-radio-button>
-        <el-radio-button label="soup">炖汤</el-radio-button>
+        <el-radio-button label="other">其他</el-radio-button>
       </el-radio-group>
     </div>
 
@@ -22,16 +22,49 @@
       <template #default>
         <section class="meal-section">
           <!-- 午餐/晚餐显示 -->
-          <template v-if="currentMealType !== 'soup'">
+          <template v-if="currentMealType !== 'other'">
             <div class="category-cards">
-              <div v-for="(label, key) in categories" :key="key" class="category-card">
-                <h3>{{ categoryLabels[key] }}</h3>
+              <!-- 荤菜 -->
+              <div class="category-card">
+                <h3>{{ categoryLabels.meat }}</h3>
                 <el-empty
-                  v-if="!menuStore.currentMenu?.items?.[key]?.length"
+                  v-if="!menuStore.currentMenu?.items?.meat?.length"
                   description="暂无菜品数据"
                   :image-size="80"
                 />
-                <el-table v-else :data="menuStore.currentMenu?.items?.[key] || []">
+                <el-table v-else :data="menuStore.currentMenu?.items?.meat || []">
+                  <el-table-column prop="name" label="菜品" />
+                  <el-table-column prop="price" label="价格" width="80">
+                    <template #default="{ row }">¥{{ row.price }}</template>
+                  </el-table-column>
+                </el-table>
+              </div>
+
+              <!-- 半荤素 -->
+              <div class="category-card">
+                <h3>{{ categoryLabels.halfMeat }}</h3>
+                <el-empty
+                  v-if="!menuStore.currentMenu?.items?.halfMeat?.length"
+                  description="暂无菜品数据"
+                  :image-size="80"
+                />
+                <el-table v-else :data="menuStore.currentMenu?.items?.halfMeat || []">
+                  <el-table-column prop="name" label="菜品" />
+                  <el-table-column prop="price" label="价格" width="80">
+                    <template #default="{ row }">¥{{ row.price }}</template>
+                  </el-table-column>
+                </el-table>
+              </div>
+
+              <!-- 素菜 -->
+              <div class="category-card">
+                <h3>{{ categoryLabels.vegetable }}</h3>
+                <el-empty
+                  v-if="!menuStore.currentMenu?.items?.vegetable?.length"
+                  description="暂无菜品数据"
+                  :image-size="80"
+                />
+                <el-table v-else :data="menuStore.currentMenu?.items?.vegetable || []">
                   <el-table-column prop="name" label="菜品" />
                   <el-table-column prop="price" label="价格" width="80">
                     <template #default="{ row }">¥{{ row.price }}</template>
@@ -45,7 +78,7 @@
           <template v-else>
             <div class="category-cards">
               <div class="category-card">
-                <h3>🥘 汤品清单</h3>
+                <h3>🥘 炖汤</h3>
                 <el-empty
                   v-if="!menuStore.currentMenu?.items?.soup?.length"
                   description="暂无汤品数据"
@@ -60,7 +93,22 @@
               </div>
 
               <div class="category-card">
-                <h3>🥤 饮料清单</h3>
+                <h3>🍚 主食</h3>
+                <el-empty
+                  v-if="!menuStore.currentMenu?.items?.staple?.length"
+                  description="暂无主食数据"
+                  :image-size="80"
+                />
+                <el-table v-else :data="menuStore.currentMenu?.items?.staple || []">
+                  <el-table-column prop="name" label="主食" />
+                  <el-table-column prop="price" label="价格" width="80">
+                    <template #default="{ row }">¥{{ row.price }}</template>
+                  </el-table-column>
+                </el-table>
+              </div>
+
+              <div class="category-card">
+                <h3>🥤 饮料</h3>
                 <el-empty
                   v-if="!menuStore.currentMenu?.items?.drink?.length"
                   description="暂无饮料数据"
@@ -117,19 +165,19 @@ const categories = {
   meat: '荤菜',
   halfMeat: '半荤素',
   vegetable: '素菜',
-  staple: '汤饭',
+  staple: '主食',
 } as const
 
 const categoryLabels = {
   meat: '🥩 荤菜',
   halfMeat: '🥘 半荤素',
   vegetable: '🥬 素菜',
-  staple: '🍚 汤饭',
+  staple: '🍚 主食',
 } as const
 
 // 计算属性
 const buttonText = computed(() => {
-  return currentMealType.value === 'soup'
+  return currentMealType.value === 'other'
     ? '炖汤'
     : currentMealType.value === 'lunch'
       ? '午餐'
@@ -169,7 +217,7 @@ const loadMenuData = async (type: MenuType) => {
     if (error instanceof Error) {
       // 对特定错误进行友好处理
       if (error.message.includes('没有找到')) {
-        errorMsg = `今日暂无${type === 'lunch' ? '午餐' : type === 'dinner' ? '晚餐' : '炖汤'}菜单`
+        errorMsg = `今日暂无${type === 'lunch' ? '午餐' : type === 'dinner' ? '晚餐' : '其他'}菜单`
       } else {
         errorMsg = error.message
       }
@@ -208,7 +256,7 @@ onMounted(() => {
   let initialType = currentMealType.value
 
   // 如果有URL参数且是有效的菜单类型，使用它
-  if (typeParam && ['lunch', 'dinner', 'soup'].includes(typeParam)) {
+  if (typeParam && ['lunch', 'dinner', 'other'].includes(typeParam)) {
     initialType = typeParam as MenuType
     currentMealType.value = initialType
   }

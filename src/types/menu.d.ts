@@ -2,10 +2,12 @@
 import { RecordModel } from 'pocketbase'
 
 // 菜单类型
-export type MenuType = 'lunch' | 'dinner' | 'soup'
+export type MenuType = 'lunch' | 'dinner' | 'other' // 注：'other'在UI中显示为'其他'
 
 // 分类类型
 export type CategoryType = 'meat' | 'halfMeat' | 'vegetable' | 'staple' | 'soup' | 'drink'
+// 注：午餐/晚餐显示：meat(荤菜), halfMeat(半荤素), vegetable(素菜)
+// 注：其他(soup)显示：soup(炖汤), staple(主食), drink(饮料)
 
 // 尺寸类型
 export type SizeType = 'regular' | 'small' | 'large'
@@ -27,6 +29,7 @@ export interface Dish extends RecordModel {
 export interface Menu extends RecordModel {
   date: string
   type: MenuType
+  name: string
   created: string
   updated: string
 }

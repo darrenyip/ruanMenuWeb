@@ -39,9 +39,9 @@ const routes = [
     },
   },
   {
-    path: '/soup',
-    name: 'SoupEditor',
-    component: () => import('@/views/SoupEditor.vue'),
+    path: '/other',
+    name: 'OtherEditor',
+    component: () => import('@/views/OtherEditor.vue'),
     meta: {
       requiresAuth: true,
       transition: 'slide-left',

@@ -1,7 +1,7 @@
 <template>
   <div class="editor-container">
     <el-page-header @back="$router.push('/')" title="返回总览" />
-    <h2>{{ props.menuTitle }}</h2>
+    <h2>{{ pageTitle }}</h2>
 
     <!-- 创建新菜品按钮 -->
     <div class="dish-search-section">
@@ -222,7 +222,7 @@ const router = useRouter()
 
 // 接收的属性
 const props = defineProps<{
-  mealType: MenuType // 'lunch' | 'dinner' | 'soup'
+  mealType: MenuType // 'lunch' | 'dinner' | 'other'
   menuTitle: string
 }>()
 
@@ -282,8 +282,8 @@ const categoryLabels = {
   meat: '🥩 荤菜',
   halfMeat: '🥘 半荤素',
   vegetable: '🥬 素菜',
-  staple: '🍚 汤饭',
-  soup: '🥘 汤品',
+  staple: '🍚 主食',
+  soup: '🥘 炖汤',
   drink: '🥤 饮料',
 }
 
@@ -293,16 +293,16 @@ const categoryOptions = {
   halfMeat: '半荤素',
   vegetable: '素菜',
   staple: '主食',
-  soup: '汤品',
+  soup: '炖汤',
   drink: '饮料',
 }
 
 // 根据菜单类型显示相关分类
 const visibleCategories = computed(() => {
-  if (props.mealType === 'soup') {
-    return ['soup', 'drink'] as CategoryType[]
+  if (props.mealType === 'other') {
+    return ['soup', 'staple', 'drink'] as CategoryType[]
   }
-  return ['meat', 'halfMeat', 'vegetable', 'staple'] as CategoryType[]
+  return ['meat', 'halfMeat', 'vegetable'] as CategoryType[]
 })
 
 // 过滤后的分类对象，仅包含可见分类
@@ -312,6 +312,17 @@ const filteredCategories = computed(() => {
     result[category] = categoryLabels[category]
   }
   return result
+})
+
+// 计算标题
+const pageTitle = computed(() => {
+  if (props.mealType === 'other') {
+    return '其他菜单编辑'
+  } else if (props.mealType === 'lunch') {
+    return '午餐菜单编辑'
+  } else {
+    return '晚餐菜单编辑'
+  }
 })
 
 // 加载菜单数据
@@ -507,7 +518,7 @@ const removeItem = (category: CategoryType, index: number) => {
 const openNewDishForm = () => {
   newDishForm.value = {
     name: '',
-    category: props.mealType === 'soup' ? 'soup' : 'meat',
+    category: props.mealType === 'other' ? 'soup' : 'meat',
     basePrice: 0,
     smallPrice: 0,
     largePrice: 0,
@@ -605,6 +616,7 @@ const saveChanges = async () => {
         menuRecord = await pb.collection('menus').create({
           date: menuDate.value,
           type: props.mealType,
+          name: props.mealType === 'lunch' ? '午餐' : props.mealType === 'dinner' ? '晚餐' : '其他',
         })
         menuId.value = menuRecord.id
       }
@@ -613,6 +625,7 @@ const saveChanges = async () => {
       menuRecord = await pb.collection('menus').create({
         date: menuDate.value,
         type: props.mealType,
+        name: props.mealType === 'lunch' ? '午餐' : props.mealType === 'dinner' ? '晚餐' : '其他',
       })
       menuId.value = menuRecord.id
     }

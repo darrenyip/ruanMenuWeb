@@ -20,7 +20,7 @@ export const useMenuStore = defineStore('menu', {
     lastFetchTime: {
       lunch: 0,
       dinner: 0,
-      soup: 0,
+      other: 0, // 键名改为'other'，在UI中显示为"其他"
     },
   }),
 
