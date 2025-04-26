@@ -34,8 +34,20 @@
                 />
                 <el-table v-else :data="menuStore.currentMenu?.items?.meat || []">
                   <el-table-column prop="name" label="菜品" />
-                  <el-table-column prop="price" label="价格" width="80">
-                    <template #default="{ row }">¥{{ row.price }}</template>
+                  <el-table-column label="价格" width="100">
+                    <template #default="{ row }">
+                      <!-- 如果有大小份，显示大小份价格 -->
+                      <div v-if="row.hasMultipleSizes" class="price-display">
+                        <div class="price-item">
+                          <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                        </div>
+                        <div class="price-item">
+                          <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                        </div>
+                      </div>
+                      <!-- 如果只有基础价格 -->
+                      <div v-else>¥{{ row.price }}</div>
+                    </template>
                   </el-table-column>
                 </el-table>
               </div>
@@ -50,8 +62,20 @@
                 />
                 <el-table v-else :data="menuStore.currentMenu?.items?.halfMeat || []">
                   <el-table-column prop="name" label="菜品" />
-                  <el-table-column prop="price" label="价格" width="80">
-                    <template #default="{ row }">¥{{ row.price }}</template>
+                  <el-table-column label="价格" width="100">
+                    <template #default="{ row }">
+                      <!-- 如果有大小份，显示大小份价格 -->
+                      <div v-if="row.hasMultipleSizes" class="price-display">
+                        <div class="price-item">
+                          <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                        </div>
+                        <div class="price-item">
+                          <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                        </div>
+                      </div>
+                      <!-- 如果只有基础价格 -->
+                      <div v-else>¥{{ row.price }}</div>
+                    </template>
                   </el-table-column>
                 </el-table>
               </div>
@@ -66,8 +90,20 @@
                 />
                 <el-table v-else :data="menuStore.currentMenu?.items?.vegetable || []">
                   <el-table-column prop="name" label="菜品" />
-                  <el-table-column prop="price" label="价格" width="80">
-                    <template #default="{ row }">¥{{ row.price }}</template>
+                  <el-table-column label="价格" width="100">
+                    <template #default="{ row }">
+                      <!-- 如果有大小份，显示大小份价格 -->
+                      <div v-if="row.hasMultipleSizes" class="price-display">
+                        <div class="price-item">
+                          <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                        </div>
+                        <div class="price-item">
+                          <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                        </div>
+                      </div>
+                      <!-- 如果只有基础价格 -->
+                      <div v-else>¥{{ row.price }}</div>
+                    </template>
                   </el-table-column>
                 </el-table>
               </div>
@@ -86,8 +122,20 @@
                 />
                 <el-table v-else :data="menuStore.currentMenu?.items?.soup || []">
                   <el-table-column prop="name" label="汤品" />
-                  <el-table-column prop="price" label="价格" width="80">
-                    <template #default="{ row }">¥{{ row.price }}</template>
+                  <el-table-column label="价格" width="100">
+                    <template #default="{ row }">
+                      <!-- 如果有大小份，显示大小份价格 -->
+                      <div v-if="row.hasMultipleSizes" class="price-display">
+                        <div class="price-item">
+                          <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                        </div>
+                        <div class="price-item">
+                          <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                        </div>
+                      </div>
+                      <!-- 如果只有基础价格 -->
+                      <div v-else>¥{{ row.price }}</div>
+                    </template>
                   </el-table-column>
                 </el-table>
               </div>
@@ -101,8 +149,20 @@
                 />
                 <el-table v-else :data="menuStore.currentMenu?.items?.staple || []">
                   <el-table-column prop="name" label="主食" />
-                  <el-table-column prop="price" label="价格" width="80">
-                    <template #default="{ row }">¥{{ row.price }}</template>
+                  <el-table-column label="价格" width="100">
+                    <template #default="{ row }">
+                      <!-- 如果有大小份，显示大小份价格 -->
+                      <div v-if="row.hasMultipleSizes" class="price-display">
+                        <div class="price-item">
+                          <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                        </div>
+                        <div class="price-item">
+                          <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                        </div>
+                      </div>
+                      <!-- 如果只有基础价格 -->
+                      <div v-else>¥{{ row.price }}</div>
+                    </template>
                   </el-table-column>
                 </el-table>
               </div>
@@ -116,8 +176,20 @@
                 />
                 <el-table v-else :data="menuStore.currentMenu?.items?.drink || []">
                   <el-table-column prop="name" label="饮料" />
-                  <el-table-column prop="price" label="价格" width="80">
-                    <template #default="{ row }">¥{{ row.price }}</template>
+                  <el-table-column label="价格" width="100">
+                    <template #default="{ row }">
+                      <!-- 如果有大小份，显示大小份价格 -->
+                      <div v-if="row.hasMultipleSizes" class="price-display">
+                        <div class="price-item">
+                          <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                        </div>
+                        <div class="price-item">
+                          <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                        </div>
+                      </div>
+                      <!-- 如果只有基础价格 -->
+                      <div v-else>¥{{ row.price }}</div>
+                    </template>
                   </el-table-column>
                 </el-table>
               </div>
@@ -515,5 +587,21 @@ onMounted(() => {
     right: 16px;
     padding: 8px 14px;
   }
+}
+
+/* 添加多规格价格显示样式 */
+.price-display {
+  display: flex;
+  flex-direction: column;
+}
+
+.price-item {
+  margin: 2px 0;
+}
+
+.price-label {
+  color: #909399;
+  font-size: 12px;
+  margin-right: 2px;
 }
 </style>
