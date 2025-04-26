@@ -1,5 +1,5 @@
 <template>
-  <meal-editor type="soup" title="汤类菜单" />
+  <meal-editor meal-type="soup" menu-title="汤品饮料菜单" />
 </template>
 
 <script setup lang="ts">

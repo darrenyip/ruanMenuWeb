@@ -3,103 +3,92 @@
   <header class="app-header">
     <responsive-container>
       <div class="header-content">
-        <h1 class="logo">{{ shopName }}</h1>
+        <!-- 左侧Logo -->
+        <router-link to="/" class="logo">
+          <span class="logo-text">菜单</span>
+        </router-link>
 
-        <!-- 桌面导航 -->
-        <nav class="desktop-nav">
-          <router-link to="/overview">总览</router-link>
-          <router-link to="/lunch">午餐</router-link>
-          <router-link to="/dinner">晚餐</router-link>
-        </nav>
+        <!-- 中间日期 -->
+        <div class="date-display">
+          {{ formattedDate }}
+        </div>
 
-        <!-- 移动导航切换按钮 -->
-        <el-button class="mobile-menu-toggle" @click="showMobileMenu = true">
-          <el-icon><Menu /></el-icon>
+        <!-- 右侧退出 -->
+        <el-button class="logout-btn" type="text" @click="handleLogout">
+          <el-icon :size="24"><CloseBold /></el-icon>
         </el-button>
       </div>
     </responsive-container>
-
-    <!-- 移动菜单 -->
-    <el-drawer v-model="showMobileMenu" direction="ltr" size="80%">
-      <nav class="mobile-nav">
-        <router-link
-          v-for="item in navItems"
-          :key="item.path"
-          :to="item.path"
-          @click="showMobileMenu = false"
-        >
-          {{ item.title }}
-        </router-link>
-      </nav>
-    </el-drawer>
   </header>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { Menu } from '@element-plus/icons-vue'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { CloseBold } from '@element-plus/icons-vue'
 
-const showMobileMenu = ref(false)
-const navItems = [
-  { path: '/overview', title: '总览' },
-  { path: '/lunch', title: '午餐' },
-  { path: '/dinner', title: '晚餐' },
-]
+const router = useRouter()
+
+// 格式化日期显示
+const formattedDate = computed(() => {
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  const weekDays = ['日', '一', '二', '三', '四', '五', '六']
+  const weekDay = weekDays[date.getDay()]
+  return `${year}年${month}月${day}日 周${weekDay}`
+})
+
+// 退出登录
+const handleLogout = () => {
+  // 这里添加你的退出逻辑
+  console.log('执行退出登录')
+  router.push('/login')
+}
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .app-header {
   background: $primary-color;
   color: $text-color-light;
-  padding: 1rem 0;
+  padding: 12px 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 
   .header-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    height: 48px;
   }
 
-  .desktop-nav {
-    display: none;
-    gap: 2rem;
+  .logo {
+    text-decoration: none;
+    flex: 0 0 80px;
 
-    a {
+    &-text {
+      font-size: 18px;
+      font-weight: 600;
       color: inherit;
-      text-decoration: none;
-      font-weight: 500;
-
-      &:hover {
-        opacity: 0.8;
-      }
-    }
-
-    @media (min-width: map-get($breakpoints, tablet)) {
-      display: flex;
     }
   }
 
-  .mobile-menu-toggle {
-    display: block;
-    @media (min-width: map-get($breakpoints, tablet)) {
-      display: none;
-    }
+  .date-display {
+    flex: 1;
+    text-align: center;
+    font-size: 14px;
+    opacity: 0.9;
   }
 
-  .mobile-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding: 2rem;
+  .logout-btn {
+    flex: 0 0 40px;
+    color: inherit;
+    padding: 0;
 
-    a {
-      padding: 1rem;
-      color: $text-color-dark;
-      text-decoration: none;
-      border-radius: 4px;
-
-      &:hover {
-        background: #f5f7fa;
-      }
+    &:hover {
+      opacity: 0.8;
     }
   }
 }
