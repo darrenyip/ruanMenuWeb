@@ -348,12 +348,14 @@ onMounted(() => {
 <style scoped>
 /* 桌面端优先设计 */
 .overview {
+  padding: 24px;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 30px;
-  background-color: #fff;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background-color: #fff;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .overview h1 {
@@ -381,7 +383,12 @@ onMounted(() => {
 }
 
 .meal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   margin-top: 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .category-cards {
@@ -392,12 +399,13 @@ onMounted(() => {
 }
 
 .category-card {
-  flex: 1;
-  min-width: 280px;
-  background-color: #f9fafc;
+  background-color: #f9f9f9;
   border-radius: 8px;
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  min-width: 300px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .meal-section h3 {
@@ -490,7 +498,10 @@ onMounted(() => {
 @media screen and (max-width: 768px) {
   .overview {
     padding: 20px;
-    border-radius: 6px;
+    margin: 10px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    height: calc(100vh - 20px);
   }
 
   .overview h1 {
@@ -518,11 +529,15 @@ onMounted(() => {
   .category-cards {
     flex-direction: column;
     gap: 15px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .category-card {
     width: 100%;
     min-width: unset;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .meal-section h3 {
@@ -557,6 +572,10 @@ onMounted(() => {
     padding: 16px;
     box-shadow: none;
     border-radius: 0;
+    margin: 0;
+    height: 100vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .overview h1 {
@@ -571,6 +590,8 @@ onMounted(() => {
 
   .category-card {
     padding: 12px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .time-switch :deep(.el-radio-button) {

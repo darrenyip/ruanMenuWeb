@@ -26,12 +26,20 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  overflow-x: hidden; /* 防止水平滚动 */
+  -webkit-overflow-scrolling: touch; /* 在iOS上启用平滑滚动 */
+}
+
+html {
+  overflow-x: hidden; /* 防止水平滚动 */
+  height: 100%;
 }
 
 #app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  overflow-x: hidden; /* 防止水平滚动 */
 }
 
 /* 平板和手机端的响应式设计 */
@@ -45,11 +53,39 @@ body {
   #app {
     max-width: 100%;
   }
+
+  /* 修复移动端滚动问题 */
+  body {
+    position: relative;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .overview,
+  .category-card,
+  .meal-section {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 @media (max-width: 480px) {
   #app {
     max-width: 100%;
     padding: 0;
+  }
+
+  /* 小屏幕设备的滚动优化 */
+  body {
+    position: relative;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .overview,
+  .category-card,
+  .meal-section {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
