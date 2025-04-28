@@ -1,10 +1,29 @@
 @import './base.css';
 
+/* 全局滚动修复 */
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* 防止body出现滚动条 */
+}
+
 /* 桌面端优先的样式设计 */
 #app {
   max-width: 100%;
   margin: 0 auto;
   font-weight: normal;
+  height: 100%;
+  overflow-y: auto; /* 只保留一个主滚动容器 */
+  overflow-x: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 a,
@@ -24,22 +43,6 @@ a,
 /* 桌面端布局 - 默认 */
 body {
   min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden; /* 防止水平滚动 */
-  -webkit-overflow-scrolling: touch; /* 在iOS上启用平滑滚动 */
-}
-
-html {
-  overflow-x: hidden; /* 防止水平滚动 */
-  height: 100%;
-}
-
-#app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  overflow-x: hidden; /* 防止水平滚动 */
 }
 
 /* 平板和手机端的响应式设计 */
@@ -54,18 +57,11 @@ html {
     max-width: 100%;
   }
 
-  /* 修复移动端滚动问题 */
-  body {
-    position: relative;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
+  /* 修复移动端滚动问题 - 移除内部容器的滚动 */
   .overview,
   .category-card,
   .meal-section {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible; /* 移除内部滚动 */
   }
 }
 
@@ -75,17 +71,10 @@ html {
     padding: 0;
   }
 
-  /* 小屏幕设备的滚动优化 */
-  body {
-    position: relative;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
+  /* 小屏幕设备的滚动优化 - 移除内部容器的滚动 */
   .overview,
   .category-card,
   .meal-section {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible; /* 移除内部滚动 */
   }
 }

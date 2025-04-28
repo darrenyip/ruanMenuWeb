@@ -139,6 +139,7 @@ const handleLogout = () => {
   display: flex;
   flex-direction: column;
   background-color: #f5f7fa;
+  overflow: hidden; /* 防止整体出现滚动条 */
 
   .main-header {
     height: 70px !important;
@@ -229,6 +230,8 @@ const handleLogout = () => {
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
+    box-sizing: border-box; /* 确保padding不会增加元素宽度 */
+    position: relative; /* 为子元素提供定位上下文 */
   }
 }
 

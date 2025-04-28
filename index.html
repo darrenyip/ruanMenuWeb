@@ -5,11 +5,32 @@
     <link rel="icon" href="/favicon.ico" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
     <meta name="theme-color" content="#409eff" />
     <meta name="description" content="软食坊菜单管理系统" />
-    <title>菜单管理</title>
+    <title>软食坊菜单管理系统</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* 防止body出现滚动条 */
+      }
+      #app {
+        height: 100%;
+        overflow-y: auto; /* 只保留一个主滚动容器 */
+        overflow-x: hidden;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        -webkit-overflow-scrolling: touch;
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>

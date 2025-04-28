@@ -354,8 +354,11 @@ onMounted(() => {
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   background-color: #fff;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: visible; /* 移除内部滚动 */
+  height: 100%;
+  position: relative;
+  box-sizing: border-box; /* 确保padding不会增加元素宽度 */
+  width: 100%; /* 确保宽度不会超出父容器 */
 }
 
 .overview h1 {
@@ -387,8 +390,8 @@ onMounted(() => {
   flex-direction: column;
   gap: 20px;
   margin-top: 20px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: visible; /* 移除内部滚动 */
+  position: relative;
 }
 
 .category-cards {
@@ -404,8 +407,8 @@ onMounted(() => {
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   min-width: 300px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: visible; /* 移除内部滚动 */
+  position: relative;
 }
 
 .meal-section h3 {
@@ -499,9 +502,11 @@ onMounted(() => {
   .overview {
     padding: 20px;
     margin: 10px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible; /* 移除内部滚动 */
     height: calc(100vh - 20px);
+    position: relative;
+    box-sizing: border-box; /* 确保padding不会增加元素宽度 */
+    width: calc(100% - 20px); /* 考虑margin的宽度 */
   }
 
   .overview h1 {
@@ -529,15 +534,15 @@ onMounted(() => {
   .category-cards {
     flex-direction: column;
     gap: 15px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible; /* 移除内部滚动 */
+    position: relative;
   }
 
   .category-card {
     width: 100%;
     min-width: unset;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible; /* 移除内部滚动 */
+    position: relative;
   }
 
   .meal-section h3 {
@@ -574,8 +579,10 @@ onMounted(() => {
     border-radius: 0;
     margin: 0;
     height: 100vh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible; /* 移除内部滚动 */
+    position: relative;
+    box-sizing: border-box; /* 确保padding不会增加元素宽度 */
+    width: 100%; /* 确保宽度不会超出父容器 */
   }
 
   .overview h1 {
@@ -590,8 +597,8 @@ onMounted(() => {
 
   .category-card {
     padding: 12px;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible; /* 移除内部滚动 */
+    position: relative;
   }
 
   .time-switch :deep(.el-radio-button) {
