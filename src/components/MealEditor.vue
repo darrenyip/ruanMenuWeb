@@ -86,18 +86,21 @@
     </div>
 
     <div class="action-buttons">
-      <el-button type="primary" @click="saveChanges" :loading="saving">保存修改</el-button>
-      <el-button @click="$router.push('/')">取消</el-button>
+      <el-button type="primary" @click="saveChanges" :loading="saving" class="action-button"
+        >保存修改</el-button
+      >
+      <el-button @click="$router.push('/')" class="action-button">取消</el-button>
     </div>
 
     <!-- 创建新菜品的表单对话框 -->
     <el-dialog
       v-model="newDishFormVisible"
       title="创建新菜品"
-      width="500px"
+      :width="isMobile ? '90%' : '500px'"
       :close-on-click-modal="false"
+      class="new-dish-dialog"
     >
-      <el-form :model="newDishForm" label-width="100px">
+      <el-form :model="newDishForm" label-width="100px" class="new-dish-form">
         <el-form-item label="菜品名称">
           <el-autocomplete
             v-model="newDishForm.name"
@@ -116,7 +119,7 @@
         </el-form-item>
 
         <el-form-item label="分类" required>
-          <el-select v-model="newDishForm.category" placeholder="选择分类">
+          <el-select v-model="newDishForm.category" placeholder="选择分类" style="width: 100%">
             <el-option
               v-for="(label, value) in categoryOptions"
               :key="value"
@@ -133,6 +136,7 @@
             :precision="1"
             :step="0.5"
             placeholder="基础价格"
+            style="width: 100%"
           />
         </el-form-item>
 
@@ -147,6 +151,7 @@
             :precision="1"
             :step="0.5"
             placeholder="小份价格"
+            style="width: 100%"
           />
         </el-form-item>
 
@@ -157,6 +162,7 @@
             :precision="1"
             :step="0.5"
             placeholder="大份价格"
+            style="width: 100%"
           />
         </el-form-item>
 
@@ -170,8 +176,10 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="newDishFormVisible = false">取消</el-button>
-        <el-button type="primary" @click="createNewDish" :loading="creatingDish">创建</el-button>
+        <div class="dialog-footer">
+          <el-button @click="newDishFormVisible = false">取消</el-button>
+          <el-button type="primary" @click="createNewDish" :loading="creatingDish">创建</el-button>
+        </div>
       </template>
     </el-dialog>
 
@@ -816,6 +824,14 @@ const savePrice = async () => {
   }
 }
 
+// 添加移动端检测
+const isMobile = ref(window.innerWidth <= 768)
+
+// 监听窗口大小变化
+window.addEventListener('resize', () => {
+  isMobile.value = window.innerWidth <= 768
+})
+
 // 页面加载时初始化数据
 onMounted(async () => {
   await loadDishes()
@@ -832,6 +848,10 @@ onMounted(async () => {
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .dish-search-section {
@@ -869,11 +889,13 @@ onMounted(async () => {
 }
 
 .category-cards {
+  flex: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
   justify-content: space-between;
   margin-bottom: 30px;
+  overflow-y: auto;
 }
 
 .category-card {
@@ -911,12 +933,17 @@ onMounted(async () => {
   flex: 1;
 }
 
+/* 底部按钮区域 */
 .action-buttons {
   margin-top: 40px;
   text-align: right;
   display: flex;
   justify-content: flex-end;
   gap: 15px;
+}
+
+.action-button {
+  min-width: 100px;
 }
 
 /* 平板设备 */
@@ -956,7 +983,11 @@ onMounted(async () => {
 @media screen and (max-width: 768px) {
   .editor-container {
     padding: 20px;
-    border-radius: 6px;
+    margin: 0;
+    border-radius: 0;
+    min-height: 100vh;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .dish-search-section {
@@ -970,6 +1001,7 @@ onMounted(async () => {
     flex-direction: column;
     gap: 15px;
     margin-bottom: 20px;
+    padding-bottom: 0;
   }
 
   .category-card {
@@ -994,14 +1026,23 @@ onMounted(async () => {
     flex-direction: column;
     gap: 10px;
   }
+
+  .action-button {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .action-buttons :deep(.el-button + .el-button) {
+    margin-left: 0 !important;
+  }
 }
 
 /* 小屏手机 */
 @media screen and (max-width: 480px) {
   .editor-container {
     padding: 15px;
-    box-shadow: none;
-    border-radius: 0;
+    padding-top: calc(env(safe-area-inset-top) + 10px);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
   }
 
   .dish-search-section {
@@ -1043,5 +1084,93 @@ onMounted(async () => {
 .price-label {
   color: #909399;
   margin-right: 4px;
+}
+
+/* 新菜品弹窗样式 */
+.new-dish-dialog :deep(.el-dialog) {
+  margin: 0 auto;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.new-dish-dialog :deep(.el-dialog__body) {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.new-dish-form {
+  max-width: 100%;
+}
+
+.new-dish-form :deep(.el-form-item) {
+  margin-bottom: 20px;
+}
+
+.new-dish-form :deep(.el-form-item__label) {
+  font-weight: 500;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 10px 20px;
+  border-top: 1px solid #ebeef5;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+  .new-dish-dialog :deep(.el-dialog) {
+    margin: 5vh auto;
+    width: 90% !important;
+  }
+
+  .new-dish-dialog :deep(.el-dialog__body) {
+    padding: 15px;
+  }
+
+  .new-dish-form :deep(.el-form-item) {
+    margin-bottom: 15px;
+  }
+
+  .new-dish-form :deep(.el-form-item__label) {
+    float: none;
+    display: block;
+    text-align: left;
+    padding: 0 0 8px;
+    line-height: 1.5;
+  }
+
+  .new-dish-form :deep(.el-form-item__content) {
+    margin-left: 0 !important;
+  }
+
+  .dialog-footer {
+    padding: 10px 15px;
+  }
+}
+
+/* 小屏手机适配 */
+@media screen and (max-width: 480px) {
+  .new-dish-dialog :deep(.el-dialog) {
+    margin: 0;
+    width: 100% !important;
+    height: 100vh;
+    border-radius: 0;
+  }
+
+  .new-dish-dialog :deep(.el-dialog__body) {
+    padding: 12px;
+  }
+
+  .new-dish-form :deep(.el-form-item) {
+    margin-bottom: 12px;
+  }
+
+  .dialog-footer {
+    padding: 8px 12px;
+  }
 }
 </style>
