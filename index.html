@@ -21,7 +21,7 @@
       }
       #app {
         height: 100%;
-        overflow-y: auto; /* 只保留一个主滚动容器 */
+        overflow-y: auto;
         overflow-x: hidden;
         position: absolute;
         top: 0;
@@ -29,6 +29,7 @@
         right: 0;
         bottom: 0;
         -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
       }
     </style>
   </head>

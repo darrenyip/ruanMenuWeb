@@ -232,14 +232,11 @@ const handleLogout = () => {
   .main-content {
     flex: 1;
     padding: 24px;
-    overflow-y: auto;
-    overflow-x: hidden;
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
     box-sizing: border-box;
     position: relative;
-    -webkit-overflow-scrolling: touch;
     margin-top: 70px;
   }
 }
