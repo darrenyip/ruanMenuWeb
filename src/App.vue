@@ -241,7 +241,6 @@ const handleLogout = () => {
     position: relative;
     -webkit-overflow-scrolling: touch;
     margin-top: 70px;
-    height: calc(100vh - 70px);
   }
 }
 
@@ -285,7 +284,6 @@ const handleLogout = () => {
     .main-content {
       padding: 20px;
       margin-top: 65px;
-      height: calc(100vh - 65px);
     }
   }
 }
@@ -336,7 +334,6 @@ const handleLogout = () => {
     .main-content {
       padding: 16px;
       margin-top: 60px;
-      height: calc(100vh - 60px);
     }
   }
 }
@@ -381,7 +378,6 @@ const handleLogout = () => {
     .main-content {
       padding: 12px;
       margin-top: 60px;
-      height: calc(100vh - 60px);
     }
   }
 }

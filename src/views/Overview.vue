@@ -349,12 +349,10 @@ onMounted(() => {
 /* 桌面端优先设计 */
 .overview {
   padding: 24px;
-  max-width: 1200px;
   margin: 0 auto;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   background-color: #fff;
-  min-height: 100vh;
   box-sizing: border-box;
   width: 100%;
 }
@@ -572,9 +570,6 @@ onMounted(() => {
     box-shadow: none;
     border-radius: 0;
     margin: 0;
-    height: auto;
-    min-height: 100vh;
-    width: 100%;
   }
 
   .overview h1 {
