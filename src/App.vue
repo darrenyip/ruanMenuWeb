@@ -259,8 +259,8 @@ const handleLogout = () => {
 @media screen and (max-width: 1024px) {
   .app-container {
     .main-header {
-      padding: 0 16px;
       height: 65px !important;
+      padding: 0 16px;
 
       .header-content {
         .logo-text {
@@ -294,8 +294,8 @@ const handleLogout = () => {
 @media screen and (max-width: 768px) {
   .app-container {
     .main-header {
-      padding: 0 12px;
       height: 60px !important;
+      padding: 0 12px;
 
       .header-content {
         .logo-text {
