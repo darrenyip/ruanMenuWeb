@@ -16,9 +16,6 @@ body {
   margin: 0 auto;
   font-weight: normal;
   height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  position: absolute;
   top: 0;
   left: 0;
   right: 0;
@@ -38,11 +35,6 @@ a,
   a:hover {
     background-color: hsla(160, 100%, 37%, 0.2);
   }
-}
-
-/* 桌面端布局 - 默认 */
-body {
-  min-height: 100vh;
 }
 
 /* 平板和手机端的响应式设计 */
@@ -69,12 +61,5 @@ body {
   #app {
     max-width: 100%;
     padding: 0;
-  }
-
-  /* 小屏幕设备的滚动优化 */
-  .overview,
-  .category-card,
-  .meal-section {
-    overflow: visible;
   }
 }
