@@ -139,13 +139,19 @@ const handleLogout = () => {
   display: flex;
   flex-direction: column;
   background-color: #f5f7fa;
-  overflow: hidden; /* 防止整体出现滚动条 */
+  overflow: hidden;
 
   .main-header {
     height: 70px !important;
     background: linear-gradient(135deg, #409eff, #3183ce) !important;
     padding: 0 24px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
 
     .header-content {
       display: flex;
@@ -234,6 +240,8 @@ const handleLogout = () => {
     box-sizing: border-box;
     position: relative;
     -webkit-overflow-scrolling: touch;
+    margin-top: 70px;
+    height: calc(100vh - 70px);
   }
 }
 
@@ -276,6 +284,8 @@ const handleLogout = () => {
 
     .main-content {
       padding: 20px;
+      margin-top: 65px;
+      height: calc(100vh - 65px);
     }
   }
 }
@@ -325,8 +335,8 @@ const handleLogout = () => {
 
     .main-content {
       padding: 16px;
-      overflow-y: auto;
-      overflow-x: hidden;
+      margin-top: 60px;
+      height: calc(100vh - 60px);
     }
   }
 }
@@ -370,8 +380,8 @@ const handleLogout = () => {
 
     .main-content {
       padding: 12px;
-      overflow-y: auto;
-      overflow-x: hidden;
+      margin-top: 60px;
+      height: calc(100vh - 60px);
     }
   }
 }

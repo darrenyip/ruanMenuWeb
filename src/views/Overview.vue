@@ -438,7 +438,7 @@ onMounted(() => {
 /* 悬浮编辑按钮 */
 .floating-edit-btn {
   position: fixed;
-  bottom: 30px;
+  bottom: 40px;
   right: 30px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: all 0.3s;
@@ -488,7 +488,7 @@ onMounted(() => {
 
   /* 平板设备的悬浮按钮 */
   .floating-edit-btn {
-    bottom: 25px;
+    bottom: 30px;
     right: 25px;
     padding: 10px 20px;
   }
@@ -553,7 +553,7 @@ onMounted(() => {
 
   /* 手机设备的悬浮按钮 */
   .floating-edit-btn {
-    bottom: 20px;
+    bottom: 30px;
     right: 20px;
     padding: 8px 16px;
     font-size: 14px;
@@ -601,7 +601,7 @@ onMounted(() => {
 
   /* 小屏手机的悬浮按钮 */
   .floating-edit-btn {
-    bottom: 16px;
+    bottom: 25px;
     right: 16px;
     padding: 8px 14px;
   }
