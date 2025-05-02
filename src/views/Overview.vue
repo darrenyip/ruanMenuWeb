@@ -357,7 +357,6 @@ onMounted(() => {
   min-height: 100vh;
   box-sizing: border-box;
   width: 100%;
-  overflow-x: hidden;
 }
 
 .overview h1 {
@@ -397,6 +396,7 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 20px;
   justify-content: space-between;
+  margin-bottom: 30px;
 }
 
 .category-card {
@@ -498,13 +498,12 @@ onMounted(() => {
 @media screen and (max-width: 768px) {
   .overview {
     padding: 20px;
-    margin: 10px;
+    margin: 0;
     height: auto;
-    min-height: calc(100vh - 20px);
+    min-height: 100vh;
     position: relative;
     box-sizing: border-box;
-    width: calc(100% - 20px);
-    overflow-x: hidden;
+    width: 100%;
   }
 
   .overview h1 {
@@ -532,6 +531,7 @@ onMounted(() => {
   .category-cards {
     flex-direction: column;
     gap: 15px;
+    margin-bottom: 20px;
   }
 
   .category-card {
@@ -575,7 +575,6 @@ onMounted(() => {
     height: auto;
     min-height: 100vh;
     width: 100%;
-    overflow-x: hidden;
   }
 
   .overview h1 {

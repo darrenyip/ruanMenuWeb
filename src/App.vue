@@ -226,12 +226,14 @@ const handleLogout = () => {
   .main-content {
     flex: 1;
     padding: 24px;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
-    box-sizing: border-box; /* 确保padding不会增加元素宽度 */
-    position: relative; /* 为子元素提供定位上下文 */
+    box-sizing: border-box;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -323,6 +325,8 @@ const handleLogout = () => {
 
     .main-content {
       padding: 16px;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
   }
 }
@@ -366,6 +370,8 @@ const handleLogout = () => {
 
     .main-content {
       padding: 12px;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
   }
 }

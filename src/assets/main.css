@@ -7,7 +7,7 @@ body {
   width: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden; /* 防止body出现滚动条 */
+  overflow: hidden;
 }
 
 /* 桌面端优先的样式设计 */
@@ -16,7 +16,7 @@ body {
   margin: 0 auto;
   font-weight: normal;
   height: 100%;
-  overflow-y: auto; /* 只保留一个主滚动容器 */
+  overflow-y: auto;
   overflow-x: hidden;
   position: absolute;
   top: 0;
@@ -57,11 +57,11 @@ body {
     max-width: 100%;
   }
 
-  /* 修复移动端滚动问题 - 移除内部容器的滚动 */
+  /* 修复移动端滚动问题 */
   .overview,
   .category-card,
   .meal-section {
-    overflow: visible; /* 移除内部滚动 */
+    overflow: visible;
   }
 }
 
@@ -71,10 +71,10 @@ body {
     padding: 0;
   }
 
-  /* 小屏幕设备的滚动优化 - 移除内部容器的滚动 */
+  /* 小屏幕设备的滚动优化 */
   .overview,
   .category-card,
   .meal-section {
-    overflow: visible; /* 移除内部滚动 */
+    overflow: visible;
   }
 }
