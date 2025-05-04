@@ -7,15 +7,13 @@
         <el-icon><Plus /></el-icon> 添加菜品
       </el-button>
 
-      <el-input
-        v-model="searchQuery"
-        placeholder="搜索菜品"
-        prefix-icon="Search"
-        clearable
-        class="search-input"
-      />
+      <el-input v-model="searchQuery" placeholder="搜索菜品" clearable class="search-input">
+        <template #prefix>
+          <el-icon><Search /></el-icon>
+        </template>
+      </el-input>
 
-      <el-select v-model="categoryFilter" placeholder="分类筛选" clearable>
+      <el-select v-model="categoryFilter" placeholder="分类筛选" clearable class="category-select">
         <el-option label="全部分类" value="" />
         <el-option label="荤菜" value="meat" />
         <el-option label="半荤素" value="halfMeat" />
@@ -26,31 +24,66 @@
       </el-select>
     </div>
 
-    <el-table :data="filteredDishes" style="width: 100%" v-loading="loading" border>
-      <el-table-column prop="name" label="菜品名称" min-width="150" />
-      <el-table-column label="分类" width="120">
-        <template #default="{ row }">
-          <el-tag :type="getCategoryTag(row.category)">
-            {{ getCategoryLabel(row.category) }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="价格" width="200">
-        <template #default="{ row }">
-          <div v-if="row.hasMultipleSizes" class="price-display">
-            <div class="price-item"><span class="price-label">小:</span> ¥{{ row.smallPrice }}</div>
-            <div class="price-item"><span class="price-label">大:</span> ¥{{ row.largePrice }}</div>
-          </div>
-          <div v-else>¥{{ row.basePrice }}</div>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="150" fixed="right">
-        <template #default="{ row }">
-          <el-button size="small" type="primary" @click="editDish(row)"> 编辑 </el-button>
-          <el-button size="small" type="danger" @click="confirmDelete(row)"> 删除 </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <div class="table-container">
+      <el-table :data="filteredDishes" style="width: 100%" v-loading="loading" border>
+        <el-table-column prop="name" label="菜品名称" min-width="150" />
+        <el-table-column label="价格" width="120">
+          <template #default="{ row }">
+            <div v-if="row.hasMultipleSizes" class="price-display">
+              <div class="price-item">
+                <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+              </div>
+              <div class="price-item">
+                <span class="price-label">大:</span> ¥{{ row.largePrice }}
+              </div>
+            </div>
+            <div v-else>¥{{ row.basePrice }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="分类" width="90">
+          <template #default="{ row }">
+            <el-tag :type="getCategoryTag(row.category)">
+              {{ getCategoryLabel(row.category) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" :width="isMobile ? '80' : '150'" fixed="right">
+          <template #default="{ row }">
+            <div class="operation-buttons">
+              <div class="btn-wrapper">
+                <el-button
+                  v-if="isMobile"
+                  size="small"
+                  type="primary"
+                  @click="editDish(row)"
+                  class="mobile-btn"
+                >
+                  <el-icon><Edit /></el-icon>
+                </el-button>
+                <el-button v-else size="small" type="primary" @click="editDish(row)"
+                  >编辑</el-button
+                >
+              </div>
+
+              <div class="btn-wrapper">
+                <el-button
+                  v-if="isMobile"
+                  size="small"
+                  type="danger"
+                  @click="confirmDelete(row)"
+                  class="mobile-btn"
+                >
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+                <el-button v-else size="small" type="danger" @click="confirmDelete(row)"
+                  >删除</el-button
+                >
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
 
     <!-- 分页 -->
     <div class="pagination-container">
@@ -58,7 +91,9 @@
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"
         :page-sizes="[10, 20, 50, 100]"
-        layout="total, sizes, prev, pager, next"
+        :layout="isMobile ? 'prev, pager, next' : 'total, sizes, prev, pager, next'"
+        :small="isMobile"
+        :pager-count="isMobile ? 5 : 7"
         :total="totalDishes"
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
@@ -66,8 +101,19 @@
     </div>
 
     <!-- 编辑菜品对话框 -->
-    <el-dialog v-model="dialogVisible" :title="isEditMode ? '编辑菜品' : '添加菜品'" width="500px">
-      <el-form :model="dishForm" label-width="120px" :rules="rules" ref="dishFormRef">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="isEditMode ? '编辑菜品' : '添加菜品'"
+      width="90%"
+      :fullscreen="isMobile"
+      class="dish-dialog"
+    >
+      <el-form
+        :model="dishForm"
+        :label-width="isMobile ? '80px' : '120px'"
+        :rules="rules"
+        ref="dishFormRef"
+      >
         <el-form-item label="菜品名称" prop="name">
           <el-input v-model="dishForm.name" placeholder="请输入菜品名称" />
         </el-form-item>
@@ -122,7 +168,7 @@
 import { ref, computed, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
-import { Plus, Search } from '@element-plus/icons-vue'
+import { Plus, Search, Edit, Delete } from '@element-plus/icons-vue'
 import type { Dish, CategoryType } from '@/types/menu'
 import { dishApi } from '@/api/dish'
 
@@ -141,9 +187,18 @@ const pageSize = ref(10)
 const searchQuery = ref('')
 const categoryFilter = ref('')
 
-// 监听搜索和分类筛选变化，重置页码
+// 判断是否为移动设备
+const isMobile = ref(window.innerWidth < 768)
+
+// 监听窗口大小变化
+window.addEventListener('resize', () => {
+  isMobile.value = window.innerWidth < 768
+})
+
+// 监听搜索和分类筛选变化，重置页码并重新加载数据
 watch([searchQuery, categoryFilter], () => {
   currentPage.value = 1
+  loadDishes()
 })
 
 // 编辑对话框
@@ -177,11 +232,11 @@ const buildFilter = computed(() => {
   const conditions = []
 
   if (categoryFilter.value) {
-    conditions.push(`category='${categoryFilter.value}'`)
+    conditions.push(`category="${categoryFilter.value}"`)
   }
 
   if (searchQuery.value) {
-    conditions.push(`name~'${searchQuery.value}'`)
+    conditions.push(`name~"${searchQuery.value}"`)
   }
 
   return conditions.join(' && ')
@@ -223,6 +278,7 @@ const loadDishes = async () => {
   loading.value = true
   try {
     const filter = buildFilter.value
+    console.log('筛选条件:', filter) // 调试用
     const result = await dishApi.getDishes(currentPage.value, pageSize.value, filter)
 
     dishes.value = result.items
@@ -381,6 +437,10 @@ onMounted(() => {
   width: 300px;
 }
 
+.category-select {
+  width: 160px;
+}
+
 .price-display {
   display: flex;
   flex-direction: column;
@@ -400,21 +460,134 @@ onMounted(() => {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+  width: 100%;
+  overflow-x: auto;
 }
 
-/* 响应式设计 */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.operation-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-wrapper {
+  flex: 0 0 auto;
+}
+
+.mobile-btn {
+  border-radius: 4px;
+  min-width: 32px;
+  height: 32px;
+  padding: 5px;
+}
+
+/* 移除第二个按钮的左边距 */
+.operation-buttons .mobile-btn + .mobile-btn {
+  margin-left: 0 !important;
+}
+
 @media screen and (max-width: 768px) {
   .tools-section {
     flex-direction: column;
     gap: 12px;
   }
 
-  .search-input {
+  .search-input,
+  .category-select {
     width: 100%;
   }
 
   .pagination-container {
     justify-content: center;
+    padding-bottom: 10px;
+  }
+
+  :deep(.el-pagination) {
+    white-space: nowrap;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: nowrap;
+  }
+
+  /* 对话框在移动端的样式调整 */
+  :deep(.dish-dialog .el-dialog__body) {
+    padding: 15px;
+  }
+
+  :deep(.dish-dialog .el-form-item) {
+    margin-bottom: 15px;
+  }
+
+  :deep(.dish-dialog .el-form-item__label) {
+    width: 80px !important;
+    padding-right: 5px;
+  }
+
+  :deep(.dish-dialog .el-form) {
+    max-width: 100%;
+  }
+
+  :deep(.dish-dialog .dialog-footer) {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  :deep(.dish-dialog .dialog-footer .el-button) {
+    flex: 1;
+    margin-left: 10px;
+  }
+
+  :deep(.dish-dialog .dialog-footer .el-button:first-child) {
+    margin-left: 0;
+  }
+
+  /* 表格在移动端的样式调整 */
+  .table-container {
+    margin: 0 -10px;
+    width: calc(100% + 20px);
+  }
+
+  :deep(.el-table__header),
+  :deep(.el-table__body) {
+    min-width: 100%;
+  }
+
+  /* 表格样式优化 */
+  :deep(.el-table .cell) {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+
+  :deep(.el-table-column--selection .cell) {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .operation-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+  }
+
+  .operation-buttons .el-button {
+    min-width: 32px;
+    padding: 5px;
+  }
+
+  /* 调整价格显示 */
+  .price-display {
+    font-size: 12px;
+  }
+
+  /* 在移动设备上特别强调移除左边距 */
+  .operation-buttons .el-button + .el-button {
+    margin-left: 0 !important;
   }
 }
 </style>
