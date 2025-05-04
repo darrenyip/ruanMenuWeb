@@ -123,11 +123,10 @@ onMounted(async () => {
 <style lang="scss">
 /* 桌面端优先设计 */
 .app-container {
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background-color: #f5f7fa;
-  overflow: hidden;
 
   .main-header {
     height: 70px !important;
