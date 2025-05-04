@@ -234,6 +234,7 @@ function organizeMenuItemsByCategory(menuItems: MenuItem[]): OrganizedMenuItems 
         dishId: dish.id,
         name: dish.name,
         price: dish.basePrice,
+        category: category,
         hasMultipleSizes: dish.hasMultipleSizes,
         smallPrice: dish.smallPrice,
         largePrice: dish.largePrice,

@@ -119,11 +119,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from 'vue'
+import { ref, computed, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import type { Dish, CategoryType } from '@/types/menu'
+import { dishApi } from '@/api/dish'
 
 // 加载状态
 const loading = ref(false)
@@ -139,6 +140,11 @@ const pageSize = ref(10)
 // 搜索和筛选
 const searchQuery = ref('')
 const categoryFilter = ref('')
+
+// 监听搜索和分类筛选变化，重置页码
+watch([searchQuery, categoryFilter], () => {
+  currentPage.value = 1
+})
 
 // 编辑对话框
 const dialogVisible = ref(false)
@@ -166,40 +172,35 @@ const rules = {
   largePrice: [{ required: true, message: '请输入大份价格', trigger: 'blur' }],
 }
 
+// 构建筛选条件
+const buildFilter = computed(() => {
+  const conditions = []
+
+  if (categoryFilter.value) {
+    conditions.push(`category='${categoryFilter.value}'`)
+  }
+
+  if (searchQuery.value) {
+    conditions.push(`name~'${searchQuery.value}'`)
+  }
+
+  return conditions.join(' && ')
+})
+
 // 筛选后的菜品列表
 const filteredDishes = computed(() => {
-  let result = [...dishes.value]
-
-  // 分类筛选
-  if (categoryFilter.value) {
-    result = result.filter((dish) => dish.category === categoryFilter.value)
-  }
-
-  // 搜索筛选
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    result = result.filter(
-      (dish) =>
-        dish.name.toLowerCase().includes(query) ||
-        (dish.description || '').toLowerCase().includes(query),
-    )
-  }
-
-  // 返回当前页的数据
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return result.slice(start, end)
+  return dishes.value
 })
 
 // 获取分类标签样式
 const getCategoryTag = (category: CategoryType) => {
-  const map: Record<CategoryType, string> = {
+  const map: Record<CategoryType, 'success' | 'warning' | 'info' | 'primary' | 'danger'> = {
     meat: 'danger',
     halfMeat: 'warning',
     vegetable: 'success',
     soup: 'info',
     staple: 'primary',
-    drink: '',
+    drink: 'info',
   }
   return map[category]
 }
@@ -221,64 +222,11 @@ const getCategoryLabel = (category: CategoryType) => {
 const loadDishes = async () => {
   loading.value = true
   try {
-    // 这里需要实现一个从API获取菜品数据的方法
-    // 示例代码:
-    // const result = await dishApi.getDishes()
-    // dishes.value = result.items
-    // totalDishes.value = result.total
+    const filter = buildFilter.value
+    const result = await dishApi.getDishes(currentPage.value, pageSize.value, filter)
 
-    // 暂时使用模拟数据
-    setTimeout(() => {
-      // 模拟数据 - 实际项目中需要替换为API调用
-      dishes.value = [
-        {
-          id: '1',
-          name: '红烧肉',
-          category: 'meat',
-          basePrice: 15,
-          hasMultipleSizes: true,
-          smallPrice: 10,
-          largePrice: 15,
-          description: '经典红烧肉',
-          created: '',
-          updated: '',
-        },
-        {
-          id: '2',
-          name: '炒青菜',
-          category: 'vegetable',
-          basePrice: 8,
-          hasMultipleSizes: false,
-          description: '新鲜时令蔬菜',
-          created: '',
-          updated: '',
-        },
-        {
-          id: '3',
-          name: '宫保鸡丁',
-          category: 'meat',
-          basePrice: 12,
-          hasMultipleSizes: true,
-          smallPrice: 8,
-          largePrice: 12,
-          description: '',
-          created: '',
-          updated: '',
-        },
-        {
-          id: '4',
-          name: '紫菜蛋花汤',
-          category: 'soup',
-          basePrice: 5,
-          hasMultipleSizes: false,
-          description: '',
-          created: '',
-          updated: '',
-        },
-      ]
-      totalDishes.value = dishes.value.length
-      loading.value = false
-    }, 500)
+    dishes.value = result.items
+    totalDishes.value = result.totalItems
   } catch (error) {
     console.error('加载菜品失败', error)
     ElMessage.error('加载菜品失败')
@@ -288,11 +236,13 @@ const loadDishes = async () => {
 }
 
 // 分页处理
-const handleSizeChange = () => {
+const handleSizeChange = (size: number) => {
+  pageSize.value = size
   loadDishes()
 }
 
-const handleCurrentChange = () => {
+const handleCurrentChange = (page: number) => {
+  currentPage.value = page
   loadDishes()
 }
 
@@ -349,19 +299,14 @@ const confirmDelete = (dish: Dish) => {
 const deleteDish = async (dish: Dish) => {
   try {
     loading.value = true
-    // 这里需要实现一个从API删除菜品的方法
-    // await dishApi.deleteDish(dish.id)
+    await dishApi.deleteDish(dish.id)
 
-    // 模拟删除成功
-    setTimeout(() => {
-      dishes.value = dishes.value.filter((item) => item.id !== dish.id)
-      totalDishes.value = dishes.value.length
-      ElMessage.success(`菜品"${dish.name}"已删除`)
-      loading.value = false
-    }, 500)
+    ElMessage.success(`菜品"${dish.name}"已删除`)
+    loadDishes() // 重新加载数据
   } catch (error) {
     console.error('删除菜品失败', error)
     ElMessage.error('删除菜品失败')
+  } finally {
     loading.value = false
   }
 }
@@ -375,41 +320,32 @@ const saveDish = async () => {
       try {
         loading.value = true
 
-        // 这里需要实现一个从API保存菜品的方法
-        // const saveData = {...dishForm}
-        // if (isEditMode.value) {
-        //   await dishApi.updateDish(saveData)
-        // } else {
-        //   await dishApi.createDish(saveData)
-        // }
+        const saveData = {
+          name: dishForm.name,
+          category: dishForm.category,
+          basePrice: dishForm.basePrice,
+          smallPrice: dishForm.hasMultipleSizes ? dishForm.smallPrice : undefined,
+          largePrice: dishForm.hasMultipleSizes ? dishForm.largePrice : undefined,
+          hasMultipleSizes: dishForm.hasMultipleSizes,
+          description: dishForm.description || undefined,
+        }
 
-        // 模拟保存成功
-        setTimeout(() => {
-          if (isEditMode.value) {
-            // 更新现有菜品
-            const index = dishes.value.findIndex((item) => item.id === dishForm.id)
-            if (index !== -1) {
-              dishes.value[index] = { ...(dishForm as any) }
-            }
-            ElMessage.success('菜品更新成功')
-          } else {
-            // 添加新菜品
-            dishes.value.push({
-              ...dishForm,
-              id: Date.now().toString(), // 模拟ID
-              created: new Date().toISOString(),
-              updated: new Date().toISOString(),
-            } as any)
-            totalDishes.value = dishes.value.length
-            ElMessage.success('菜品添加成功')
-          }
+        if (isEditMode.value) {
+          // 更新现有菜品
+          await dishApi.updateDish(dishForm.id, saveData)
+          ElMessage.success('菜品更新成功')
+        } else {
+          // 添加新菜品
+          await dishApi.createDish(saveData)
+          ElMessage.success('菜品添加成功')
+        }
 
-          dialogVisible.value = false
-          loading.value = false
-        }, 500)
+        dialogVisible.value = false
+        loadDishes() // 重新加载数据
       } catch (error) {
         console.error('保存菜品失败', error)
         ElMessage.error('保存菜品失败')
+      } finally {
         loading.value = false
       }
     }

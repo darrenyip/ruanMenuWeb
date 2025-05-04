@@ -464,6 +464,7 @@ const handleDishSelect = (item: Record<string, any>, category: CategoryType) => 
     dishId: item.id, // 保存dish ID，用于后续编辑
     name: item.name,
     price: item.basePrice,
+    category: category, // 添加category属性
     hasMultipleSizes: item.hasMultipleSizes || false,
     smallPrice: item.smallPrice || 0,
     largePrice: item.largePrice || 0,
