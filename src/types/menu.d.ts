@@ -61,6 +61,7 @@ export interface MenuItemDisplay {
   dishId?: string // 关联菜品ID，用于编辑操作
   name: string
   price: number
+  category: CategoryType // 菜品分类
   // 可选保留尺寸信息，用于显示，但从dish中获取
   hasMultipleSizes?: boolean
   smallPrice?: number // 小份价格

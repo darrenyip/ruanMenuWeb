@@ -10,20 +10,22 @@
             <span class="logo-text">软食坊</span>
           </router-link>
 
-          <!-- 中间日期 -->
+          <!-- 中间导航菜单 -->
+          <div class="nav-menu">
+            <router-link to="/overview" class="nav-item" active-class="active">
+              <el-icon><Grid /></el-icon> 总览
+            </router-link>
+            <router-link to="/dishes" class="nav-item" active-class="active">
+              <el-icon><Food /></el-icon> 菜品管理
+            </router-link>
+          </div>
+
+          <!-- 右侧日期显示 -->
           <div class="date-display">
             <!-- 在大屏幕显示完整日期 -->
             <span class="full-date">{{ formattedDate }}</span>
             <!-- 在小屏幕显示简短日期 -->
             <span class="short-date">{{ shortFormattedDate }}</span>
-          </div>
-
-          <!-- 右侧退出 -->
-          <div class="user-controls">
-            <span class="welcome-text">欢迎，{{ username }}</span>
-            <el-button class="logout-btn" type="text" @click="handleLogout">
-              退出 <el-icon><CloseBold /></el-icon>
-            </el-button>
           </div>
         </div>
       </el-header>
@@ -61,15 +63,13 @@ import { ElConfigProvider, ElMessage } from 'element-plus'
 import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { CloseBold } from '@element-plus/icons-vue'
+import { Grid, Food } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 // 状态管理
 const loading = ref(false)
-const shopName = ref('菜单')
-const username = computed(() => authStore.username || '管理员')
 
 // 计算属性
 const isAuthenticated = computed(() => authStore.state.isAuthenticated)
@@ -93,11 +93,6 @@ const shortFormattedDate = computed(() => {
   const weekDay = weekDays[date.getDay()]
   return `${month}月${day}日 周${weekDay}`
 })
-
-// 新增点击跳转方法
-const goToOverview = () => {
-  router.push('/overview')
-}
 
 // 生命周期钩子
 onMounted(async () => {
@@ -123,13 +118,6 @@ onMounted(async () => {
     loading.value = false
   }
 })
-
-// 退出登录
-const handleLogout = () => {
-  authStore.logout()
-  router.replace('/login')
-  ElMessage.success('已退出登录')
-}
 </script>
 
 <style lang="scss">
@@ -169,6 +157,7 @@ const handleLogout = () => {
         align-items: center;
         text-decoration: none;
         transition: transform 0.3s ease;
+        flex-shrink: 0;
 
         &:hover {
           transform: scale(1.05);
@@ -182,12 +171,47 @@ const handleLogout = () => {
         }
       }
 
+      .nav-menu {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-shrink: 0;
+        margin: 0 20px;
+
+        .nav-item {
+          color: white;
+          font-size: 16px;
+          text-decoration: none;
+          transition: color 0.3s ease;
+          padding: 6px 10px;
+          border-radius: 4px;
+
+          &:hover {
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.1);
+          }
+
+          &.active {
+            color: white;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.15);
+          }
+
+          .el-icon {
+            margin-right: 6px;
+            vertical-align: middle;
+          }
+        }
+      }
+
       .date-display {
         color: white;
         font-size: 16px;
         padding: 6px 12px;
         border-radius: 4px;
         text-align: center;
+        margin-left: auto;
+        background: rgba(255, 255, 255, 0.1);
 
         .full-date {
           display: inline-block;
@@ -195,35 +219,6 @@ const handleLogout = () => {
 
         .short-date {
           display: none;
-        }
-      }
-
-      .user-controls {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-
-        .welcome-text {
-          color: white;
-          font-size: 15px;
-        }
-
-        .logout-btn {
-          color: white !important;
-          background-color: rgba(255, 255, 255, 0.15);
-          border-radius: 4px;
-          padding: 8px 16px;
-          font-size: 14px;
-          transition: background-color 0.3s ease;
-
-          &:hover {
-            background-color: rgba(255, 255, 255, 0.25);
-          }
-
-          .el-icon {
-            margin-left: 6px;
-            vertical-align: middle;
-          }
         }
       }
     }
@@ -263,17 +258,17 @@ const handleLogout = () => {
           font-size: 22px;
         }
 
+        .nav-menu {
+          gap: 15px;
+
+          .nav-item {
+            font-size: 15px;
+          }
+        }
+
         .date-display {
           font-size: 15px;
           padding: 5px 10px;
-        }
-
-        .user-controls {
-          gap: 12px;
-
-          .logout-btn {
-            padding: 6px 12px;
-          }
         }
       }
     }
@@ -297,12 +292,22 @@ const handleLogout = () => {
           font-size: 20px;
         }
 
+        .nav-menu {
+          gap: 10px;
+
+          .nav-item {
+            font-size: 14px;
+            padding: 4px 8px;
+
+            .el-icon {
+              margin-right: 4px;
+            }
+          }
+        }
+
         .date-display {
           font-size: 13px;
           padding: 4px 8px;
-          text-align: center;
-          flex: 1;
-          margin: 0 8px;
 
           .full-date {
             display: none;
@@ -310,19 +315,6 @@ const handleLogout = () => {
 
           .short-date {
             display: inline-block;
-          }
-        }
-
-        .user-controls {
-          gap: 8px;
-
-          .welcome-text {
-            display: none;
-          }
-
-          .logout-btn {
-            padding: 4px 10px;
-            font-size: 13px;
           }
         }
       }
@@ -346,28 +338,22 @@ const handleLogout = () => {
           font-size: 18px;
         }
 
-        .date-display {
-          font-size: 11px;
-          padding: 3px 6px;
-          white-space: nowrap;
-          overflow: visible;
-          max-width: none;
-          line-height: 1.2;
+        .nav-menu {
+          gap: 8px;
+          margin: 0 10px;
 
-          .short-date {
-            font-weight: 500;
+          .nav-item {
+            font-size: 13px;
+            padding: 3px 6px;
+
+            .el-icon {
+              margin-right: 3px;
+            }
           }
         }
 
-        .user-controls {
-          .logout-btn {
-            padding: 3px 8px;
-            font-size: 12px;
-
-            .el-icon {
-              margin-left: 0;
-            }
-          }
+        .date-display {
+          display: none; /* 在超小屏幕上隐藏日期 */
         }
       }
     }

@@ -1,277 +1,373 @@
 <template>
-  <div class="overview">
-    <h1>今日菜单总览</h1>
-    <!-- 数据刷新区域 -->
-    <div class="refresh-section">
-      <el-button @click="loadMenuData(currentMealType)" size="small" type="primary">
-        刷新数据
-      </el-button>
-      <span class="ml-2" v-if="menuStore.currentMenu?.loadTime">
-        数据更新时间: {{ new Date(menuStore.currentMenu.loadTime).toLocaleTimeString() }}
-      </span>
-    </div>
-    <div class="time-switch">
-      <el-radio-group v-model="currentMealType">
-        <el-radio-button label="lunch">午餐</el-radio-button>
-        <el-radio-button label="dinner">晚餐</el-radio-button>
-        <el-radio-button label="other">其他</el-radio-button>
-      </el-radio-group>
+  <div class="dashboard">
+    <div class="dashboard-header">
+      <h1>菜单总览</h1>
+      <div class="action-buttons">
+        <router-link to="/dishes" class="management-link">
+          <el-button type="primary">
+            <el-icon><Food /></el-icon> 菜品管理
+          </el-button>
+        </router-link>
+      </div>
     </div>
 
-    <el-skeleton :loading="menuStore.loading" animated>
-      <template #default>
-        <section class="meal-section">
-          <!-- 午餐/晚餐显示 -->
-          <template v-if="currentMealType !== 'other'">
-            <div class="category-cards">
-              <!-- 荤菜 -->
-              <div class="category-card">
-                <h3>{{ categoryLabels.meat }}</h3>
-                <el-empty
-                  v-if="!menuStore.currentMenu?.items?.meat?.length"
-                  description="暂无菜品数据"
-                  :image-size="80"
-                />
-                <el-table v-else :data="menuStore.currentMenu?.items?.meat || []">
-                  <el-table-column prop="name" label="菜品" />
-                  <el-table-column label="价格" width="100">
-                    <template #default="{ row }">
-                      <!-- 如果有大小份，显示大小份价格 -->
-                      <div v-if="row.hasMultipleSizes" class="price-display">
-                        <div class="price-item">
-                          <span class="price-label">小:</span> ¥{{ row.smallPrice }}
-                        </div>
-                        <div class="price-item">
-                          <span class="price-label">大:</span> ¥{{ row.largePrice }}
-                        </div>
-                      </div>
-                      <!-- 如果只有基础价格 -->
-                      <div v-else>¥{{ row.price }}</div>
-                    </template>
-                  </el-table-column>
-                </el-table>
+    <div class="menu-section">
+      <!-- 午餐卡片 -->
+      <el-card class="menu-card" shadow="hover">
+        <template #header>
+          <div class="card-header">
+            <h2>午餐菜单</h2>
+            <el-button type="primary" size="small" @click="goToEdit('lunch')">
+              <el-icon><Edit /></el-icon> 编辑
+            </el-button>
+          </div>
+        </template>
+        <div class="card-content" v-loading="loadingLunch">
+          <el-empty v-if="!hasLunchItems" description="暂无午餐菜单数据" />
+          <div v-else class="category-tables">
+            <!-- 荤菜表格 -->
+            <div class="category-table" v-if="lunchMenu?.items?.meat?.length">
+              <div class="category-header meat">
+                <el-icon><Chicken /></el-icon> 荤菜
               </div>
-
-              <!-- 半荤素 -->
-              <div class="category-card">
-                <h3>{{ categoryLabels.halfMeat }}</h3>
-                <el-empty
-                  v-if="!menuStore.currentMenu?.items?.halfMeat?.length"
-                  description="暂无菜品数据"
-                  :image-size="80"
-                />
-                <el-table v-else :data="menuStore.currentMenu?.items?.halfMeat || []">
-                  <el-table-column prop="name" label="菜品" />
-                  <el-table-column label="价格" width="100">
-                    <template #default="{ row }">
-                      <!-- 如果有大小份，显示大小份价格 -->
-                      <div v-if="row.hasMultipleSizes" class="price-display">
-                        <div class="price-item">
-                          <span class="price-label">小:</span> ¥{{ row.smallPrice }}
-                        </div>
-                        <div class="price-item">
-                          <span class="price-label">大:</span> ¥{{ row.largePrice }}
-                        </div>
+              <el-table :data="lunchMenu.items.meat" size="small" :show-header="false">
+                <el-table-column prop="name" label="菜品" />
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
                       </div>
-                      <!-- 如果只有基础价格 -->
-                      <div v-else>¥{{ row.price }}</div>
-                    </template>
-                  </el-table-column>
-                </el-table>
-              </div>
-
-              <!-- 素菜 -->
-              <div class="category-card">
-                <h3>{{ categoryLabels.vegetable }}</h3>
-                <el-empty
-                  v-if="!menuStore.currentMenu?.items?.vegetable?.length"
-                  description="暂无菜品数据"
-                  :image-size="80"
-                />
-                <el-table v-else :data="menuStore.currentMenu?.items?.vegetable || []">
-                  <el-table-column prop="name" label="菜品" />
-                  <el-table-column label="价格" width="100">
-                    <template #default="{ row }">
-                      <!-- 如果有大小份，显示大小份价格 -->
-                      <div v-if="row.hasMultipleSizes" class="price-display">
-                        <div class="price-item">
-                          <span class="price-label">小:</span> ¥{{ row.smallPrice }}
-                        </div>
-                        <div class="price-item">
-                          <span class="price-label">大:</span> ¥{{ row.largePrice }}
-                        </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
                       </div>
-                      <!-- 如果只有基础价格 -->
-                      <div v-else>¥{{ row.price }}</div>
-                    </template>
-                  </el-table-column>
-                </el-table>
-              </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
             </div>
-          </template>
 
-          <!-- 炖汤显示 -->
-          <template v-else>
-            <div class="category-cards">
-              <div class="category-card">
-                <h3>🥘 炖汤</h3>
-                <el-empty
-                  v-if="!menuStore.currentMenu?.items?.soup?.length"
-                  description="暂无汤品数据"
-                  :image-size="80"
-                />
-                <el-table v-else :data="menuStore.currentMenu?.items?.soup || []">
-                  <el-table-column prop="name" label="汤品" />
-                  <el-table-column label="价格" width="100">
-                    <template #default="{ row }">
-                      <!-- 如果有大小份，显示大小份价格 -->
-                      <div v-if="row.hasMultipleSizes" class="price-display">
-                        <div class="price-item">
-                          <span class="price-label">小:</span> ¥{{ row.smallPrice }}
-                        </div>
-                        <div class="price-item">
-                          <span class="price-label">大:</span> ¥{{ row.largePrice }}
-                        </div>
-                      </div>
-                      <!-- 如果只有基础价格 -->
-                      <div v-else>¥{{ row.price }}</div>
-                    </template>
-                  </el-table-column>
-                </el-table>
+            <!-- 半荤素表格 -->
+            <div class="category-table" v-if="lunchMenu?.items?.halfMeat?.length">
+              <div class="category-header halfMeat">
+                <el-icon><Food /></el-icon> 半荤素
               </div>
-
-              <div class="category-card">
-                <h3>🍚 主食</h3>
-                <el-empty
-                  v-if="!menuStore.currentMenu?.items?.staple?.length"
-                  description="暂无主食数据"
-                  :image-size="80"
-                />
-                <el-table v-else :data="menuStore.currentMenu?.items?.staple || []">
-                  <el-table-column prop="name" label="主食" />
-                  <el-table-column label="价格" width="100">
-                    <template #default="{ row }">
-                      <!-- 如果有大小份，显示大小份价格 -->
-                      <div v-if="row.hasMultipleSizes" class="price-display">
-                        <div class="price-item">
-                          <span class="price-label">小:</span> ¥{{ row.smallPrice }}
-                        </div>
-                        <div class="price-item">
-                          <span class="price-label">大:</span> ¥{{ row.largePrice }}
-                        </div>
+              <el-table :data="lunchMenu.items.halfMeat" size="small" :show-header="false">
+                <el-table-column prop="name" label="菜品" />
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
                       </div>
-                      <!-- 如果只有基础价格 -->
-                      <div v-else>¥{{ row.price }}</div>
-                    </template>
-                  </el-table-column>
-                </el-table>
-              </div>
-
-              <div class="category-card">
-                <h3>🥤 饮料</h3>
-                <el-empty
-                  v-if="!menuStore.currentMenu?.items?.drink?.length"
-                  description="暂无饮料数据"
-                  :image-size="80"
-                />
-                <el-table v-else :data="menuStore.currentMenu?.items?.drink || []">
-                  <el-table-column prop="name" label="饮料" />
-                  <el-table-column label="价格" width="100">
-                    <template #default="{ row }">
-                      <!-- 如果有大小份，显示大小份价格 -->
-                      <div v-if="row.hasMultipleSizes" class="price-display">
-                        <div class="price-item">
-                          <span class="price-label">小:</span> ¥{{ row.smallPrice }}
-                        </div>
-                        <div class="price-item">
-                          <span class="price-label">大:</span> ¥{{ row.largePrice }}
-                        </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
                       </div>
-                      <!-- 如果只有基础价格 -->
-                      <div v-else>¥{{ row.price }}</div>
-                    </template>
-                  </el-table-column>
-                </el-table>
-              </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
             </div>
-          </template>
 
-          <!-- 原有的编辑按钮，隐藏 -->
-          <!-- <el-button type="primary" @click="goToEdit(currentMealType)" class="edit-btn">
-            编辑{{ buttonText }}
-          </el-button> -->
-        </section>
-      </template>
-    </el-skeleton>
+            <!-- 素菜表格 -->
+            <div class="category-table" v-if="lunchMenu?.items?.vegetable?.length">
+              <div class="category-header vegetable">
+                <el-icon><Dish /></el-icon> 素菜
+              </div>
+              <el-table :data="lunchMenu.items.vegetable" size="small" :show-header="false">
+                <el-table-column prop="name" label="菜品" />
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                      </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                      </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+        </div>
+      </el-card>
 
-    <!-- 悬浮编辑按钮 -->
-    <el-button
-      type="primary"
-      @click="goToEdit(currentMealType)"
-      class="floating-edit-btn"
-      size="large"
-      round
-    >
-      <el-icon class="edit-icon"><Edit /></el-icon>
-      编辑{{ buttonText }}
-    </el-button>
+      <!-- 晚餐卡片 -->
+      <el-card class="menu-card" shadow="hover">
+        <template #header>
+          <div class="card-header">
+            <h2>晚餐菜单</h2>
+            <el-button type="primary" size="small" @click="goToEdit('dinner')">
+              <el-icon><Edit /></el-icon> 编辑
+            </el-button>
+          </div>
+        </template>
+        <div class="card-content" v-loading="loadingDinner">
+          <el-empty v-if="!hasDinnerItems" description="暂无晚餐菜单数据" />
+          <div v-else class="category-tables">
+            <!-- 荤菜表格 -->
+            <div class="category-table" v-if="dinnerMenu?.items?.meat?.length">
+              <div class="category-header meat">
+                <el-icon><Chicken /></el-icon> 荤菜
+              </div>
+              <el-table :data="dinnerMenu.items.meat" size="small" :show-header="false">
+                <el-table-column prop="name" label="菜品" />
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                      </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                      </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+
+            <!-- 半荤素表格 -->
+            <div class="category-table" v-if="dinnerMenu?.items?.halfMeat?.length">
+              <div class="category-header halfMeat">
+                <el-icon><Food /></el-icon> 半荤素
+              </div>
+              <el-table :data="dinnerMenu.items.halfMeat" size="small" :show-header="false">
+                <el-table-column prop="name" label="菜品" />
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                      </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                      </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+
+            <!-- 素菜表格 -->
+            <div class="category-table" v-if="dinnerMenu?.items?.vegetable?.length">
+              <div class="category-header vegetable">
+                <el-icon><Dish /></el-icon> 素菜
+              </div>
+              <el-table :data="dinnerMenu.items.vegetable" size="small" :show-header="false">
+                <el-table-column prop="name" label="菜品" />
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                      </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                      </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+        </div>
+      </el-card>
+
+      <!-- 其他卡片 -->
+      <el-card class="menu-card" shadow="hover">
+        <template #header>
+          <div class="card-header">
+            <h2>其他菜单</h2>
+            <el-button type="primary" size="small" @click="goToEdit('other')">
+              <el-icon><Edit /></el-icon> 编辑
+            </el-button>
+          </div>
+        </template>
+        <div class="card-content" v-loading="loadingOther">
+          <el-empty v-if="!hasOtherItems" description="暂无其他菜单数据" />
+          <div v-else class="category-tables">
+            <!-- 炖汤表格 -->
+            <div class="category-table" v-if="otherMenu?.items?.soup?.length">
+              <div class="category-header soup">
+                <el-icon><Bowl /></el-icon> 炖汤
+              </div>
+              <el-table :data="otherMenu.items.soup" size="small" :show-header="false">
+                <el-table-column prop="name" label="汤品" />
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                      </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                      </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+
+            <!-- 主食表格 -->
+            <div class="category-table" v-if="otherMenu?.items?.staple?.length">
+              <div class="category-header staple">
+                <el-icon><Bowl /></el-icon> 主食
+              </div>
+              <el-table :data="otherMenu.items.staple" size="small" :show-header="false">
+                <el-table-column prop="name" label="主食" />
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                      </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                      </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+
+            <!-- 饮料表格 -->
+            <div class="category-table" v-if="otherMenu?.items?.drink?.length">
+              <div class="category-header drink">
+                <el-icon><Goblet /></el-icon> 饮料
+              </div>
+              <el-table :data="otherMenu.items.drink" size="small" :show-header="false">
+                <el-table-column prop="name" label="饮料" />
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                      </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                      </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+        </div>
+      </el-card>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMenuStore } from '@/stores/menu'
 import { ElMessage } from 'element-plus'
-import { Edit } from '@element-plus/icons-vue'
-import type { MenuType } from '@/types/menu'
+import { Edit, Food, Chicken, Dish, Bowl, Goblet } from '@element-plus/icons-vue'
+import type { MenuType, FormattedMenu } from '@/types/menu'
 
 const router = useRouter()
 const menuStore = useMenuStore()
 
 // 状态管理
-const currentMealType = ref<MenuType>('lunch')
+const lunchMenu = ref<FormattedMenu | null>(null)
+const dinnerMenu = ref<FormattedMenu | null>(null)
+const otherMenu = ref<FormattedMenu | null>(null)
+const lastLoadTime = ref<number>(0)
 
-// 分类定义
-const categories = {
-  meat: '荤菜',
-  halfMeat: '半荤素',
-  vegetable: '素菜',
-  staple: '主食',
-} as const
+// 加载状态
+const loadingLunch = ref(false)
+const loadingDinner = ref(false)
+const loadingOther = ref(false)
 
-const categoryLabels = {
-  meat: '🥩 荤菜',
-  halfMeat: '🥘 半荤素',
-  vegetable: '🥬 素菜',
-  staple: '🍚 主食',
-} as const
-
-// 计算属性
-const buttonText = computed(() => {
-  return currentMealType.value === 'other'
-    ? '炖汤'
-    : currentMealType.value === 'lunch'
-      ? '午餐'
-      : '晚餐'
+// 检查是否有菜单项
+const hasLunchItems = computed(() => {
+  const items = lunchMenu.value?.items
+  return (
+    !!items &&
+    ((items.meat && items.meat.length > 0) ||
+      (items.halfMeat && items.halfMeat.length > 0) ||
+      (items.vegetable && items.vegetable.length > 0))
+  )
 })
 
-const goToEdit = (type: string) => {
+const hasDinnerItems = computed(() => {
+  const items = dinnerMenu.value?.items
+  return (
+    !!items &&
+    ((items.meat && items.meat.length > 0) ||
+      (items.halfMeat && items.halfMeat.length > 0) ||
+      (items.vegetable && items.vegetable.length > 0))
+  )
+})
+
+const hasOtherItems = computed(() => {
+  const items = otherMenu.value?.items
+  return (
+    !!items &&
+    ((items.soup && items.soup.length > 0) ||
+      (items.staple && items.staple.length > 0) ||
+      (items.drink && items.drink.length > 0))
+  )
+})
+
+// 跳转到编辑页面
+const goToEdit = (type: MenuType) => {
   router.push(`/${type}`)
+  // 更新最后编辑的菜单类型
+  menuStore.lastEditedType = type
 }
 
-// 加载菜单数据
-const loadMenuData = async (type: MenuType) => {
-  try {
-    // 获取今天的日期，格式为 YYYY-MM-DD
-    const today = new Date().toISOString().split('T')[0]
+// 加载所有菜单数据
+const loadAllMenus = async () => {
+  // 获取今天的日期，格式为 YYYY-MM-DD
+  const today = new Date().toISOString().split('T')[0]
 
-    // 显示加载状态
-    menuStore.loading = true
+  // 依次加载三种菜单
+  await loadMenuData('lunch', today)
+  await loadMenuData('dinner', today)
+  await loadMenuData('other', today)
+
+  // 更新最后加载时间
+  lastLoadTime.value = Date.now()
+}
+
+// 加载单个菜单数据
+const loadMenuData = async (type: MenuType, date: string) => {
+  try {
+    // 设置对应的加载状态
+    if (type === 'lunch') loadingLunch.value = true
+    else if (type === 'dinner') loadingDinner.value = true
+    else loadingOther.value = true
 
     // 使用store获取菜单数据
-    await menuStore.fetchMenu(today, type)
-    console.log(`已加载${type}菜单数据:`, menuStore.currentMenu)
+    await menuStore.fetchMenu(date, type)
+
+    // 将数据保存到对应的响应式引用中
+    if (!menuStore.currentMenu) {
+      console.log(`未找到${type}菜单数据`)
+      return
+    }
+
+    const menuData = { ...menuStore.currentMenu }
+
+    if (type === 'lunch') lunchMenu.value = menuData
+    else if (type === 'dinner') dinnerMenu.value = menuData
+    else otherMenu.value = menuData
+
+    console.log(`已加载${type}菜单数据:`, menuData)
   } catch (error) {
     console.error(`加载${type}菜单失败:`, error)
 
@@ -296,325 +392,211 @@ const loadMenuData = async (type: MenuType) => {
     }
     ElMessage.error(errorMsg)
   } finally {
-    // 确保loading状态被重置
-    menuStore.loading = false
+    // 重置对应的加载状态
+    if (type === 'lunch') loadingLunch.value = false
+    else if (type === 'dinner') loadingDinner.value = false
+    else loadingOther.value = false
   }
 }
-
-// 监听菜单类型变化
-watch(currentMealType, (newType) => {
-  // 如果URL中有type参数且与当前选择不同，需要清除它
-  const typeParam = router.currentRoute.value.query.type as string | undefined
-  if (typeParam && typeParam !== newType) {
-    router.replace({
-      path: '/overview',
-      query: {},
-    })
-  }
-
-  // 加载新类型的菜单数据（延迟一点点执行，避免快速切换触发多次请求）
-  setTimeout(() => {
-    loadMenuData(newType)
-  }, 10)
-
-  // 更新最后编辑的菜单类型
-  menuStore.lastEditedType = newType
-})
 
 // 页面加载时初始化数据
 onMounted(() => {
   // 检查URL参数中是否有菜单类型
   const typeParam = router.currentRoute.value.query.type as MenuType | undefined
-  let initialType = currentMealType.value
 
-  // 如果有URL参数且是有效的菜单类型，使用它
-  if (typeParam && ['lunch', 'dinner', 'other'].includes(typeParam)) {
-    initialType = typeParam as MenuType
-    currentMealType.value = initialType
+  // 如果有lastEditedType，使用它
+  if (menuStore.lastEditedType) {
+    // 会在loadAllMenus中加载所有类型
   }
-  // 否则如果有lastEditedType，使用它
-  else if (menuStore.lastEditedType) {
-    initialType = menuStore.lastEditedType
-    currentMealType.value = initialType
+  // 如果URL中有type参数，先设置当前类型
+  else if (typeParam && ['lunch', 'dinner', 'other'].includes(typeParam)) {
+    menuStore.lastEditedType = typeParam as MenuType
   }
 
   // 用一个短暂的延迟加载数据，避免导航和状态更新过程中的重复请求
   setTimeout(() => {
-    loadMenuData(initialType)
+    loadAllMenus()
   }, 50)
 })
 </script>
 
 <style scoped>
 /* 桌面端优先设计 */
-.overview {
+.dashboard {
   padding: 24px;
+  max-width: 1400px;
   margin: 0 auto;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  background-color: #fff;
-  box-sizing: border-box;
-  width: 100%;
+  position: relative;
 }
 
-.overview h1 {
-  font-size: 28px;
-  font-weight: 600;
-  color: #303133;
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
   padding-bottom: 16px;
   border-bottom: 1px solid #ebeef5;
 }
 
-.refresh-section {
-  margin: 24px 0;
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  background-color: #f9fafc;
-  border-radius: 6px;
-}
-
-.time-switch {
-  margin-bottom: 24px;
-  display: flex;
-  justify-content: center;
-}
-
-.meal-section {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  margin-top: 20px;
-  position: relative;
-}
-
-.category-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: space-between;
-  margin-bottom: 30px;
-}
-
-.category-card {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  min-width: 300px;
-  position: relative;
-}
-
-.meal-section h3 {
-  font-size: 18px;
+.dashboard h1 {
+  font-size: 28px;
   font-weight: 600;
-  margin: 0 0 12px 0;
+  color: #303133;
+  margin: 0;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.management-link {
+  text-decoration: none;
+}
+
+.menu-section {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.menu-card {
+  transition: all 0.3s;
+}
+
+.menu-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h2 {
+  font-size: 18px;
+  margin: 0;
   color: #303133;
 }
 
-.edit-btn {
-  margin-top: 30px;
-  padding: 12px 24px;
-  font-size: 16px;
+.card-content {
+  min-height: 200px;
+  padding: 0;
 }
 
-.mt-4 {
-  margin-top: 24px;
+.category-tables {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.ml-2 {
-  margin-left: 12px;
+.category-table {
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #ebeef5;
+  margin-bottom: 4px;
+}
+
+.category-header {
+  padding: 8px 12px;
   font-size: 14px;
-  color: #606266;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.mb-2 {
-  margin-bottom: 12px;
-}
-
-/* 悬浮编辑按钮 */
-.floating-edit-btn {
-  position: fixed;
-  bottom: 40px;
-  right: 30px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s;
-  z-index: 999;
-  padding: 12px 24px;
-}
-
-.floating-edit-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-}
-
-.edit-icon {
-  margin-right: 6px;
+.category-header .el-icon {
   font-size: 16px;
 }
 
-/* 平板设备 */
-@media screen and (max-width: 1024px) {
-  .overview {
-    max-width: 100%;
-    padding: 25px;
-  }
-
-  .overview h1 {
-    font-size: 26px;
-    margin-bottom: 20px;
-  }
-
-  .refresh-section {
-    margin: 20px 0;
-  }
-
-  .category-cards {
-    gap: 15px;
-  }
-
-  .category-card {
-    min-width: 250px;
-  }
-
-  .edit-btn {
-    margin-top: 25px;
-    padding: 10px 20px;
-    font-size: 15px;
-  }
-
-  /* 平板设备的悬浮按钮 */
-  .floating-edit-btn {
-    bottom: 30px;
-    right: 25px;
-    padding: 10px 20px;
-  }
+.category-header.meat {
+  background-color: #f56c6c;
 }
 
-/* 手机设备 */
-@media screen and (max-width: 768px) {
-  .overview {
-    padding: 20px;
-    margin: 0;
-    height: auto;
-    min-height: 100vh;
-    position: relative;
-    box-sizing: border-box;
-    width: 100%;
-  }
-
-  .overview h1 {
-    font-size: 22px;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-  }
-
-  .refresh-section {
-    margin: 16px 0;
-    padding: 10px;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .ml-2 {
-    margin-left: 0;
-    margin-top: 8px;
-  }
-
-  .time-switch {
-    margin-bottom: 20px;
-  }
-
-  .category-cards {
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
-  }
-
-  .category-card {
-    width: 100%;
-    min-width: unset;
-  }
-
-  .meal-section h3 {
-    font-size: 16px;
-    margin: 0 0 10px 0;
-  }
-
-  .edit-btn {
-    margin-top: 20px;
-    padding: 8px 16px;
-    font-size: 14px;
-    width: 100%;
-  }
-
-  /* 手机设备的悬浮按钮 */
-  .floating-edit-btn {
-    bottom: 30px;
-    right: 20px;
-    padding: 8px 16px;
-    font-size: 14px;
-  }
-
-  .edit-icon {
-    margin-right: 4px;
-    font-size: 14px;
-  }
+.category-header.halfMeat {
+  background-color: #e6a23c;
 }
 
-/* 小屏手机 */
-@media screen and (max-width: 480px) {
-  .overview {
-    padding: 16px;
-    box-shadow: none;
-    border-radius: 0;
-    margin: 0;
-  }
-
-  .overview h1 {
-    font-size: 20px;
-    text-align: center;
-  }
-
-  .refresh-section {
-    margin: 12px 0;
-    padding: 8px;
-  }
-
-  .category-card {
-    padding: 12px;
-  }
-
-  .time-switch :deep(.el-radio-button) {
-    padding: 0;
-  }
-
-  .time-switch :deep(.el-radio-button__inner) {
-    padding: 8px 12px;
-  }
-
-  /* 小屏手机的悬浮按钮 */
-  .floating-edit-btn {
-    bottom: 25px;
-    right: 16px;
-    padding: 8px 14px;
-  }
+.category-header.vegetable {
+  background-color: #67c23a;
 }
 
-/* 添加多规格价格显示样式 */
+.category-header.soup {
+  background-color: #909399;
+}
+
+.category-header.staple {
+  background-color: #409eff;
+}
+
+.category-header.drink {
+  background-color: #9254de;
+}
+
+/* 价格显示样式 */
 .price-display {
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
 }
 
 .price-item {
   margin: 2px 0;
+  white-space: nowrap;
 }
 
 .price-label {
   color: #909399;
   font-size: 12px;
   margin-right: 2px;
+}
+
+/* 平板设备 */
+@media screen and (max-width: 1024px) {
+  .dashboard {
+    padding: 20px;
+  }
+}
+
+/* 手机设备 */
+@media screen and (max-width: 768px) {
+  .dashboard {
+    padding: 16px;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .dashboard h1 {
+    font-size: 22px;
+  }
+
+  .action-buttons {
+    width: 100%;
+  }
+
+  .management-link .el-button {
+    width: 100%;
+  }
+
+  .menu-section {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+/* 小屏手机 */
+@media screen and (max-width: 480px) {
+  .menu-section {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

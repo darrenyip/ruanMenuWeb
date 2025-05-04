@@ -21,6 +21,15 @@ const routes = [
     },
   },
   {
+    path: '/dishes',
+    name: 'DishManager',
+    component: () => import('@/views/DishManager.vue'),
+    meta: {
+      requiresAuth: true,
+      transition: 'slide-left',
+    },
+  },
+  {
     path: '/lunch',
     name: 'LunchEditor',
     component: () => import('@/views/LunchEditor.vue'),
