@@ -3,6 +3,18 @@
     <div class="dashboard-header">
       <h1>菜单总览</h1>
       <div class="action-buttons">
+        <!-- 日期选择器 -->
+        <div class="date-picker-container">
+          <el-date-picker
+            v-model="selectedDate"
+            type="date"
+            placeholder="选择日期"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            :size="isMobile ? 'small' : 'default'"
+            @change="handleDateChange"
+          />
+        </div>
         <router-link to="/dishes" class="management-link">
           <el-button type="primary">
             <el-icon><Food /></el-icon> 菜品管理
@@ -286,6 +298,12 @@ const lunchMenu = ref<FormattedMenu | null>(null)
 const dinnerMenu = ref<FormattedMenu | null>(null)
 const otherMenu = ref<FormattedMenu | null>(null)
 const lastLoadTime = ref<number>(0)
+const selectedDate = ref(menuStore.selectedDate) // 使用store中的选择日期
+
+// 移动端检测
+const isMobile = computed(() => {
+  return window.innerWidth <= 768
+})
 
 // 加载状态
 const loadingLunch = ref(false)
@@ -325,20 +343,36 @@ const hasOtherItems = computed(() => {
 
 // 跳转到编辑页面
 const goToEdit = (type: MenuType) => {
-  router.push(`/${type}`)
   // 更新最后编辑的菜单类型
   menuStore.lastEditedType = type
+  // 确保使用选中的日期
+  router.push({
+    path: `/${type}`,
+    query: {
+      date: selectedDate.value,
+    },
+  })
+}
+
+// 处理日期变化
+const handleDateChange = (date: string) => {
+  if (date) {
+    // 更新store中的选择日期
+    menuStore.updateSelectedDate(date)
+    // 重新加载该日期的菜单数据
+    loadAllMenus()
+  }
 }
 
 // 加载所有菜单数据
 const loadAllMenus = async () => {
-  // 获取今天的日期，格式为 YYYY-MM-DD
-  const today = new Date().toISOString().split('T')[0]
+  // 使用选择的日期，如果没有则使用今天
+  const date = selectedDate.value || new Date().toISOString().split('T')[0]
 
   // 依次加载三种菜单
-  await loadMenuData('lunch', today)
-  await loadMenuData('dinner', today)
-  await loadMenuData('other', today)
+  await loadMenuData('lunch', date)
+  await loadMenuData('dinner', date)
+  await loadMenuData('other', date)
 
   // 更新最后加载时间
   lastLoadTime.value = Date.now()
@@ -358,6 +392,10 @@ const loadMenuData = async (type: MenuType, date: string) => {
     // 将数据保存到对应的响应式引用中
     if (!menuStore.currentMenu) {
       console.log(`未找到${type}菜单数据`)
+      // 清空该类型的菜单数据
+      if (type === 'lunch') lunchMenu.value = null
+      else if (type === 'dinner') dinnerMenu.value = null
+      else otherMenu.value = null
       return
     }
 
@@ -370,6 +408,11 @@ const loadMenuData = async (type: MenuType, date: string) => {
     console.log(`已加载${type}菜单数据:`, menuData)
   } catch (error) {
     console.error(`加载${type}菜单失败:`, error)
+
+    // 清空该类型的菜单数据
+    if (type === 'lunch') lunchMenu.value = null
+    else if (type === 'dinner') dinnerMenu.value = null
+    else otherMenu.value = null
 
     // 如果是取消请求的错误，不显示错误信息
     if (
@@ -385,7 +428,7 @@ const loadMenuData = async (type: MenuType, date: string) => {
     if (error instanceof Error) {
       // 对特定错误进行友好处理
       if (error.message.includes('没有找到')) {
-        errorMsg = `今日暂无${type === 'lunch' ? '午餐' : type === 'dinner' ? '晚餐' : '其他'}菜单`
+        errorMsg = `${date} 暂无${type === 'lunch' ? '午餐' : type === 'dinner' ? '晚餐' : '其他'}菜单`
       } else {
         errorMsg = error.message
       }
@@ -403,6 +446,28 @@ const loadMenuData = async (type: MenuType, date: string) => {
 onMounted(() => {
   // 检查URL参数中是否有菜单类型
   const typeParam = router.currentRoute.value.query.type as MenuType | undefined
+  // 检查URL参数中是否有日期参数
+  const dateParam = router.currentRoute.value.query.date as string | undefined
+
+  // 获取当前本地日期
+  const getCurrentDate = () => {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
+  // 如果URL中有日期参数，更新选择的日期，否则使用当前日期
+  if (dateParam) {
+    selectedDate.value = dateParam
+    menuStore.updateSelectedDate(dateParam)
+  } else {
+    // 确保使用最新的当前日期
+    const today = getCurrentDate()
+    selectedDate.value = today
+    menuStore.updateSelectedDate(today)
+  }
 
   // 如果有lastEditedType，使用它
   if (menuStore.lastEditedType) {
@@ -448,6 +513,12 @@ onMounted(() => {
 .action-buttons {
   display: flex;
   gap: 12px;
+  align-items: center;
+}
+
+/* 日期选择器样式 */
+.date-picker-container {
+  margin-right: 10px;
 }
 
 .management-link {
