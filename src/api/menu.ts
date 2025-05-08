@@ -166,12 +166,24 @@ export const menuApi = {
       const menu = menuList.items[0]
       console.log('找到菜单:', menu)
 
-      // 2. 查找该菜单下的所有菜单项，并包含菜品信息，按sortOrder排序
-      const menuItems = (await pb.collection('menu_items').getFullList({
-        filter: `menu='${menu.id}'`,
-        expand: 'dish',
-        sort: 'sortOrder', // 按sortOrder升序排序
-      })) as MenuItem[]
+      // 2. 查找该菜单下的所有菜单项，并包含菜品信息
+      let menuItems: MenuItem[] = []
+
+      try {
+        // 首先尝试使用sortOrder字段排序
+        menuItems = (await pb.collection('menu_items').getFullList({
+          filter: `menu='${menu.id}'`,
+          expand: 'dish',
+          sort: 'sortOrder', // 尝试按sortOrder升序排序
+        })) as MenuItem[]
+      } catch (sortError) {
+        console.error('使用sortOrder排序失败，回退到默认排序:', sortError)
+        // 如果排序失败，使用默认排序（通常是按ID或创建时间）
+        menuItems = (await pb.collection('menu_items').getFullList({
+          filter: `menu='${menu.id}'`,
+          expand: 'dish',
+        })) as MenuItem[]
+      }
 
       // 3. 按类别组织数据
       const organizedItems = organizeMenuItemsByCategory(menuItems)
@@ -224,6 +236,30 @@ export const menuApi = {
         expand: 'dish',
       })
 
+      // 检查sortOrder字段是否存在于schema中
+      let schemaHasSortOrder = true
+      try {
+        // 检查菜单项集合schema中是否有sortOrder字段
+        const schema = await pb.collection('menu_items').getFullList({ limit: 1 })
+        if (schema.length > 0) {
+          const sampleItem = schema[0]
+          // 如果返回的对象中没有sortOrder字段，可能未添加该字段
+          if (!('sortOrder' in sampleItem)) {
+            console.warn('警告: menu_items集合中可能未添加sortOrder字段，请在管理界面添加此字段')
+            schemaHasSortOrder = false
+            return // 如果字段不存在，不执行后续操作
+          }
+        }
+      } catch (schemaError) {
+        console.error('检查schema失败:', schemaError)
+        // 继续尝试更新，即使schema检查失败
+      }
+
+      // 如果schema中没有sortOrder字段，则返回
+      if (!schemaHasSortOrder) {
+        return
+      }
+
       // 按类别组织菜单项
       const categorizedItems: Record<string, any[]> = {}
 
@@ -239,6 +275,8 @@ export const menuApi = {
 
       // 为每个类别的菜单项设置sortOrder
       let globalOrderCounter = 1
+      let updateCount = 0
+      let errorCount = 0
 
       for (const category in categorizedItems) {
         for (const item of categorizedItems[category]) {
@@ -248,18 +286,21 @@ export const menuApi = {
               await pb.collection('menu_items').update(item.id, {
                 sortOrder: globalOrderCounter,
               })
+              updateCount++
             } catch (updateError) {
               console.error(`更新菜单项排序失败: ${item.id}`, updateError)
+              errorCount++
             }
           }
           globalOrderCounter++
         }
       }
 
-      console.log(`已修复菜单 ${menuId} 的菜单项排序`)
+      console.log(`已修复菜单 ${menuId} 的菜单项排序 (更新: ${updateCount}, 错误: ${errorCount})`)
     } catch (error) {
       console.error('修复菜单项排序失败:', error)
-      throw error
+      // 不抛出异常，避免阻止应用程序正常运行
+      console.warn('继续运行，但排序功能可能不可用')
     }
   },
 }

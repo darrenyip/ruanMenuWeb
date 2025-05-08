@@ -836,7 +836,51 @@ const saveChanges = async () => {
     // 逐个创建菜单项
     for (const newItem of newItems) {
       try {
-        await pb.collection('menu_items').create(newItem)
+        // 尝试安全地添加排序信息
+        let itemToCreate: Record<string, any> = {
+          menu: newItem.menu,
+          dish: newItem.dish,
+        }
+
+        // 检查sortOrder字段是否支持
+        let checkSortOrder = true
+        if (newItems.length === 1) {
+          try {
+            // 获取集合结构信息（这只是一个启发式检查）
+            const schemaCheck = await pb.collection('menu_items').getFullList({
+              limit: 1,
+            })
+            if (schemaCheck.length > 0) {
+              const sampleItem = schemaCheck[0]
+              if ('sortOrder' in sampleItem) {
+                // 添加排序字段
+                itemToCreate = {
+                  ...itemToCreate,
+                  sortOrder: newItem.sortOrder,
+                }
+              } else {
+                console.warn('警告：menu_items集合可能没有sortOrder字段，创建时不包含排序')
+                checkSortOrder = false
+              }
+            }
+          } catch (error) {
+            console.error('检查集合结构失败:', error)
+            // 保险起见，尝试添加排序字段
+            itemToCreate = {
+              ...itemToCreate,
+              sortOrder: newItem.sortOrder,
+            }
+          }
+        } else {
+          // 如果有多个项目，为了效率考虑直接添加排序字段
+          itemToCreate = {
+            ...itemToCreate,
+            sortOrder: newItem.sortOrder,
+          }
+        }
+
+        // 创建菜单项
+        await pb.collection('menu_items').create(itemToCreate)
       } catch (error) {
         console.error('创建菜单项失败:', error)
         errors.push(`创建"${newItem.dish}"菜单项失败`)
@@ -846,9 +890,29 @@ const saveChanges = async () => {
     // 逐个更新现有菜单项的排序
     for (const updateItem of updateItems) {
       try {
-        await pb.collection('menu_items').update(updateItem.id, {
-          sortOrder: updateItem.sortOrder,
-        })
+        // 检查是否支持sortOrder
+        let hasField = true
+
+        // 先尝试安全地获取一个项目，看看是否有sortOrder字段
+        if (updateItems.length === 1) {
+          try {
+            const existingItem = await pb.collection('menu_items').getOne(updateItem.id)
+            if (!('sortOrder' in existingItem)) {
+              console.warn('警告：menu_items集合可能没有sortOrder字段，跳过排序更新')
+              hasField = false
+            }
+          } catch (error) {
+            // 如果获取失败，尝试继续执行
+            console.error('检查sortOrder字段时出错:', error)
+          }
+        }
+
+        // 只有在确认有字段时才进行更新
+        if (hasField) {
+          await pb.collection('menu_items').update(updateItem.id, {
+            sortOrder: updateItem.sortOrder,
+          })
+        }
       } catch (error) {
         console.error(`更新菜单项排序失败: ${updateItem.id}`, error)
         errors.push(`更新菜单项排序失败`)
