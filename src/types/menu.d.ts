@@ -5,9 +5,9 @@ import { RecordModel } from 'pocketbase'
 export type MenuType = 'lunch' | 'dinner' | 'other' // 注：'other'在UI中显示为'其他'
 
 // 分类类型
-export type CategoryType = 'meat' | 'halfMeat' | 'vegetable' | 'staple' | 'soup' | 'drink'
+export type CategoryType = 'meat' | 'halfMeat' | 'vegetable' | 'staple' | 'soup' | 'drink' | 'combo'
 // 注：午餐/晚餐显示：meat(荤菜), halfMeat(半荤素), vegetable(素菜)
-// 注：其他(soup)显示：soup(炖汤), staple(主食), drink(饮料)
+// 注：其他显示：soup(炖汤), staple(主食), drink(饮料), combo(套餐)
 
 // 尺寸类型
 export type SizeType = 'regular' | 'small' | 'large'
@@ -53,6 +53,7 @@ export interface OrganizedMenuItems {
   staple: MenuItemDisplay[]
   soup: MenuItemDisplay[]
   drink: MenuItemDisplay[]
+  combo: MenuItemDisplay[]
 }
 
 // 用于显示的菜单项数据 - 移除size字段

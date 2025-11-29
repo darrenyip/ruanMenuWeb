@@ -93,6 +93,29 @@
                 </el-table-column>
               </el-table>
             </div>
+
+            <!-- 套餐表格 -->
+            <div class="category-table" v-if="lunchMenu?.items?.combo?.length">
+              <div class="category-header combo">
+                <el-icon><Goods /></el-icon> 套餐
+              </div>
+              <el-table :data="lunchMenu.items.combo" size="small" :show-header="false">
+                <el-table-column prop="name" label="套餐" />
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                      </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                      </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
           </div>
         </div>
       </el-card>
@@ -163,6 +186,29 @@
               </div>
               <el-table :data="dinnerMenu.items.vegetable" size="small" :show-header="false">
                 <el-table-column prop="name" label="菜品" />
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                      </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                      </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+
+            <!-- 套餐表格 -->
+            <div class="category-table" v-if="dinnerMenu?.items?.combo?.length">
+              <div class="category-header combo">
+                <el-icon><Goods /></el-icon> 套餐
+              </div>
+              <el-table :data="dinnerMenu.items.combo" size="small" :show-header="false">
+                <el-table-column prop="name" label="套餐" />
                 <el-table-column label="价格" width="80" align="right">
                   <template #default="{ row }">
                     <div v-if="row.hasMultipleSizes" class="price-display">
@@ -263,6 +309,29 @@
                 </el-table-column>
               </el-table>
             </div>
+
+            <!-- 套餐表格 -->
+            <div class="category-table" v-if="otherMenu?.items?.combo?.length">
+              <div class="category-header combo">
+                <el-icon><Goods /></el-icon> 套餐
+              </div>
+              <el-table :data="otherMenu.items.combo" size="small" :show-header="false">
+                <el-table-column prop="name" label="套餐" />
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                      </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                      </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
           </div>
         </div>
       </el-card>
@@ -275,7 +344,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMenuStore } from '@/stores/menu'
 import { ElMessage } from 'element-plus'
-import { Edit, Food, Chicken, Dish, Bowl, Goblet } from '@element-plus/icons-vue'
+import { Edit, Food, Chicken, Dish, Bowl, Goblet, Goods } from '@element-plus/icons-vue'
 import type { MenuType, FormattedMenu } from '@/types/menu'
 
 const router = useRouter()
@@ -299,7 +368,8 @@ const hasLunchItems = computed(() => {
     !!items &&
     ((items.meat && items.meat.length > 0) ||
       (items.halfMeat && items.halfMeat.length > 0) ||
-      (items.vegetable && items.vegetable.length > 0))
+      (items.vegetable && items.vegetable.length > 0) ||
+      (items.combo && items.combo.length > 0))
   )
 })
 
@@ -309,7 +379,8 @@ const hasDinnerItems = computed(() => {
     !!items &&
     ((items.meat && items.meat.length > 0) ||
       (items.halfMeat && items.halfMeat.length > 0) ||
-      (items.vegetable && items.vegetable.length > 0))
+      (items.vegetable && items.vegetable.length > 0) ||
+      (items.combo && items.combo.length > 0))
   )
 })
 
@@ -319,7 +390,8 @@ const hasOtherItems = computed(() => {
     !!items &&
     ((items.soup && items.soup.length > 0) ||
       (items.staple && items.staple.length > 0) ||
-      (items.drink && items.drink.length > 0))
+      (items.drink && items.drink.length > 0) ||
+      (items.combo && items.combo.length > 0))
   )
 })
 
@@ -536,6 +608,10 @@ onMounted(() => {
 
 .category-header.drink {
   background-color: #9254de;
+}
+
+.category-header.combo {
+  background-color: #ff85c0;
 }
 
 /* 价格显示样式 */

@@ -21,6 +21,7 @@
         <el-option label="炖汤" value="soup" />
         <el-option label="主食" value="staple" />
         <el-option label="饮料" value="drink" />
+        <el-option label="套餐" value="combo" />
       </el-select>
     </div>
 
@@ -126,6 +127,7 @@
             <el-option label="炖汤" value="soup" />
             <el-option label="主食" value="staple" />
             <el-option label="饮料" value="drink" />
+            <el-option label="套餐" value="combo" />
           </el-select>
         </el-form-item>
 
@@ -256,6 +258,7 @@ const getCategoryTag = (category: CategoryType) => {
     soup: 'info',
     staple: 'primary',
     drink: 'info',
+    combo: 'primary',
   }
   return map[category]
 }
@@ -269,6 +272,7 @@ const getCategoryLabel = (category: CategoryType) => {
     soup: '炖汤',
     staple: '主食',
     drink: '饮料',
+    combo: '套餐',
   }
   return map[category]
 }
