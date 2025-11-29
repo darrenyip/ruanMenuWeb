@@ -38,6 +38,7 @@ export interface Menu extends RecordModel {
 export interface MenuItem extends RecordModel {
   menu: string // 关联到Menu的ID
   dish: string // 关联到Dish的ID
+  sortOrder?: number // 排序顺序，用于排序菜品
   created: string
   updated: string
   expand?: {
@@ -67,6 +68,7 @@ export interface MenuItemDisplay {
   hasMultipleSizes?: boolean
   smallPrice?: number // 小份价格
   largePrice?: number // 大份价格
+  sortOrder?: number // 排序顺序，用于拖拽排序功能
 }
 
 // API返回的格式化菜单数据

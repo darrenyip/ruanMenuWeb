@@ -1,7 +1,21 @@
 <template>
   <div class="editor-container">
     <el-page-header @back="$router.push('/')" title="返回总览" />
-    <h2>{{ pageTitle }}</h2>
+    <div class="editor-header">
+      <h2>{{ pageTitle }}</h2>
+      <div class="current-date">
+        <span>当前编辑日期：</span>
+        <el-date-picker
+          v-model="menuDate"
+          type="date"
+          placeholder="选择日期"
+          format="YYYY-MM-DD"
+          value-format="YYYY-MM-DD"
+          :size="isMobile ? 'small' : 'default'"
+          @change="handleDateChange"
+        />
+      </div>
+    </div>
 
     <!-- 创建新菜品按钮 -->
     <div class="dish-search-section">
@@ -18,43 +32,67 @@
           description="暂无菜品，请添加"
           :image-size="80"
         />
-        <el-table v-else :data="menuItems[key as CategoryType]">
-          <el-table-column label="菜品">
-            <template #default="{ row }">
-              <div>{{ row.name }}</div>
-            </template>
-          </el-table-column>
-          <el-table-column label="价格" width="120">
-            <template #default="{ row }">
-              <!-- 如果有大小份，显示大小份价格 -->
-              <div v-if="row.hasMultipleSizes" class="price-cell">
-                <div class="price-item" @click="openPriceEditor(row, key as CategoryType, 'small')">
-                  <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+        <div v-else class="draggable-table-container">
+          <draggable
+            v-model="menuItems[key as CategoryType]"
+            item-key="id"
+            handle=".drag-handle"
+            animation="300"
+            class="draggable-list"
+            :disabled="isMobile && isScrolling"
+            @start="dragStart"
+            @end="dragEnd"
+          >
+            <template #item="{ element, index }">
+              <div class="draggable-item">
+                <div class="drag-handle">
+                  <svg class="drag-icon" viewBox="0 0 24 24">
+                    <path
+                      fill="currentColor"
+                      d="M3,15H21V13H3V15M3,19H21V17H3V19M3,11H21V9H3V11M3,5H21V7H3V5Z"
+                    />
+                  </svg>
                 </div>
-                <div class="price-item" @click="openPriceEditor(row, key as CategoryType, 'large')">
-                  <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                <div class="dish-name">{{ element.name }}</div>
+                <div class="dish-price">
+                  <!-- 如果有大小份，显示大小份价格 -->
+                  <div v-if="element.hasMultipleSizes" class="price-cell">
+                    <div
+                      class="price-item"
+                      @click="openPriceEditor(element, key as CategoryType, 'small')"
+                    >
+                      <span class="price-label">小:</span> ¥{{ element.smallPrice }}
+                    </div>
+                    <div
+                      class="price-item"
+                      @click="openPriceEditor(element, key as CategoryType, 'large')"
+                    >
+                      <span class="price-label">大:</span> ¥{{ element.largePrice }}
+                    </div>
+                  </div>
+                  <!-- 如果只有基础价格 -->
+                  <div v-else class="price-cell">
+                    <div
+                      class="price-item"
+                      @click="openPriceEditor(element, key as CategoryType, 'base')"
+                    >
+                      ¥{{ element.price }}
+                    </div>
+                  </div>
+                </div>
+                <div class="dish-actions">
+                  <el-button
+                    type="danger"
+                    @click="removeItem(key as CategoryType, index)"
+                    size="small"
+                  >
+                    移除
+                  </el-button>
                 </div>
               </div>
-              <!-- 如果只有基础价格 -->
-              <div v-else class="price-cell">
-                <div class="price-item" @click="openPriceEditor(row, key as CategoryType, 'base')">
-                  ¥{{ row.price }}
-                </div>
-              </div>
             </template>
-          </el-table-column>
-          <el-table-column width="80">
-            <template #default="{ $index }">
-              <el-button
-                type="danger"
-                @click="removeItem(key as CategoryType, $index)"
-                size="small"
-              >
-                移除
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+          </draggable>
+        </div>
 
         <!-- 添加到当前分类的搜索框 -->
         <div class="category-add-section">
@@ -218,6 +256,7 @@ import { useRouter } from 'vue-router'
 import { useMenuStore } from '@/stores/menu'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import pb from '@/api/pocketbase'
+import { menuApi } from '@/api/menu'
 import type {
   CategoryType,
   MenuType,
@@ -225,6 +264,8 @@ import type {
   MenuItemDisplay,
   OrganizedMenuItems,
 } from '@/types/menu'
+// @ts-ignore
+import draggable from 'vuedraggable'
 
 const router = useRouter()
 
@@ -238,7 +279,17 @@ const props = defineProps<{
 const menuStore = useMenuStore()
 
 // 状态变量
-const menuDate = ref(new Date().toISOString().split('T')[0])
+const menuDate = ref(menuStore.selectedDate) // 使用store中选择的日期
+
+// 获取当前本地日期的辅助函数
+const getCurrentDate = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 const menuItems = ref<OrganizedMenuItems>({
   meat: [],
   halfMeat: [],
@@ -260,6 +311,43 @@ const categorySearchQueries = reactive<Record<CategoryType, string>>({
 })
 const saving = ref(false)
 const menuId = ref('')
+
+// 移动端检测
+const isMobile = computed(() => {
+  return window.innerWidth <= 768
+})
+
+// 拖拽相关状态
+const isScrolling = ref(false)
+let scrollTimer: number | null = null
+
+// 拖拽开始事件处理
+const dragStart = () => {
+  document.body.style.cursor = 'grabbing'
+  // 防止移动端拖拽时触发页面滚动
+  if (isMobile.value) {
+    document.body.style.overflow = 'hidden'
+  }
+}
+
+// 拖拽结束事件处理
+const dragEnd = () => {
+  document.body.style.cursor = 'auto'
+
+  // 移动端拖拽结束时，允许短暂滚动延迟，防止误触
+  if (isMobile.value) {
+    isScrolling.value = true
+    document.body.style.overflow = 'auto'
+
+    if (scrollTimer !== null) {
+      window.clearTimeout(scrollTimer)
+    }
+
+    scrollTimer = window.setTimeout(() => {
+      isScrolling.value = false
+    }, 300)
+  }
+}
 
 // 新菜品表单
 const newDishFormVisible = ref(false)
@@ -337,19 +425,24 @@ const pageTitle = computed(() => {
   }
 })
 
+// 处理日期变化
+const handleDateChange = (date: string) => {
+  if (date) {
+    // 更新store中的选择日期
+    menuStore.updateSelectedDate(date)
+    // 重新加载当前编辑日期的菜单数据
+    loadMenuData()
+  }
+}
+
 // 加载菜单数据
 const loadMenuData = async () => {
   try {
-    // 如果store中已有当前类型的菜单数据，直接使用
-    if (menuStore.currentMenu?.type === props.mealType) {
-      menuItems.value = menuStore.currentMenu.items
-      menuId.value = menuStore.currentMenu.menuId
-      return
-    }
+    // 使用当前选择的日期
+    const currentDate = menuDate.value
 
-    // 尝试加载今天的菜单
-    await menuStore.fetchMenu(menuDate.value, props.mealType)
-    menuItems.value = menuStore.currentMenu?.items || {
+    // 清空之前的菜单数据，确保没有旧数据显示
+    menuItems.value = {
       meat: [],
       halfMeat: [],
       vegetable: [],
@@ -358,7 +451,51 @@ const loadMenuData = async () => {
       drink: [],
       combo: [],
     }
-    menuId.value = menuStore.currentMenu?.menuId || ''
+    menuId.value = ''
+
+    // 尝试加载指定日期的菜单
+    await menuStore.fetchMenu(currentDate, props.mealType)
+
+    // 只有在成功获取到菜单数据时才更新
+    if (menuStore.currentMenu?.menuId) {
+      menuItems.value = menuStore.currentMenu.items || {
+        meat: [],
+        halfMeat: [],
+        vegetable: [],
+        staple: [],
+        soup: [],
+        drink: [],
+      }
+      menuId.value = menuStore.currentMenu.menuId || ''
+
+      // 如果加载成功且有菜单ID，检查并修复排序
+      if (menuId.value) {
+        // 检查是否存在排序信息
+        let hasOrder = false
+        for (const category in menuItems.value) {
+          if (
+            menuItems.value[category as CategoryType].some((item) => item.sortOrder !== undefined)
+          ) {
+            hasOrder = true
+            break
+          }
+        }
+
+        // 如果没有排序信息，则尝试修复
+        if (!hasOrder) {
+          try {
+            await menuApi.fixMenuItemsOrder(menuId.value)
+            // 修复后重新加载菜单
+            await menuStore.fetchMenu(currentDate, props.mealType)
+            if (menuStore.currentMenu?.items) {
+              menuItems.value = menuStore.currentMenu.items
+            }
+          } catch (fixError) {
+            console.error('修复排序失败:', fixError)
+          }
+        }
+      }
+    }
   } catch (error) {
     console.error('加载菜单失败:', error)
     // 创建空菜单结构
@@ -372,6 +509,9 @@ const loadMenuData = async () => {
       combo: [],
     }
     menuId.value = ''
+
+    // 显示错误消息
+    ElMessage.error(`加载${props.mealType}菜单失败: ${menuDate.value}没有菜单数据`)
   }
 }
 
@@ -650,13 +790,25 @@ const saveChanges = async () => {
       filter: `menu="${menuId.value}"`,
     })
 
-    // 3. 收集所有分类的菜单项
+    // 3. 收集所有分类的菜单项，并为每个项目添加排序信息
     const allCategoryItems: MenuItemDisplay[] = []
-    Object.keys(menuItems.value).forEach((category) => {
-      menuItems.value[category as CategoryType].forEach((item) => {
-        allCategoryItems.push(item)
+    let sortOrderCounter = 0 // 全局排序计数器
+
+    // 按分类遍历所有菜品，保持每个分类内的顺序
+    for (const category of Object.keys(menuItems.value) as CategoryType[]) {
+      const items = menuItems.value[category]
+
+      // 为每个项目添加排序号和分类信息
+      items.forEach((item, index) => {
+        // 记录项目在整个菜单中的全局排序（先按分类再按拖拽顺序）
+        sortOrderCounter++
+        allCategoryItems.push({
+          ...item,
+          sortOrder: sortOrderCounter,
+          category, // 确保记录分类信息
+        })
       })
-    })
+    }
 
     // 4. 删除不再使用的菜单项
     const idsToKeep = allCategoryItems
@@ -676,39 +828,117 @@ const saveChanges = async () => {
     }
 
     // 5. 创建或更新菜单项
-    const newItems: { menu: string; dish: string }[] = []
+    const newItems: { menu: string; dish: string; sortOrder: number }[] = []
+    const updateItems: { id: string; sortOrder: number }[] = []
     const errors: string[] = []
 
-    // 提前准备好要添加的菜品，避免重复添加
-    const dishesToAdd = new Set<string>()
+    // 准备要添加和更新的菜品
+    for (const item of allCategoryItems) {
+      // 如果是临时ID，需要创建新记录
+      if (item.id.startsWith('temp_')) {
+        const dishId = item.dishId || allDishes.value.find((d) => d.name === item.name)?.id
 
-    for (const category of Object.keys(menuItems.value) as CategoryType[]) {
-      for (const item of menuItems.value[category]) {
-        // 如果是临时ID，需要创建新记录
-        if (item.id.startsWith('temp_')) {
-          const dishId = item.dishId || allDishes.value.find((d) => d.name === item.name)?.id
-
-          if (dishId && !dishesToAdd.has(dishId)) {
-            dishesToAdd.add(dishId)
-            newItems.push({
-              menu: menuId.value,
-              dish: dishId,
-            })
-          } else if (!dishId) {
-            errors.push(`找不到菜品: ${item.name}`)
-          }
+        if (dishId) {
+          newItems.push({
+            menu: menuId.value,
+            dish: dishId,
+            sortOrder: item.sortOrder || 0, // 使用计算的排序值
+          })
+        } else {
+          errors.push(`找不到菜品: ${item.name}`)
         }
+      } else {
+        // 如果是现有ID，需要更新排序信息
+        updateItems.push({
+          id: item.id,
+          sortOrder: item.sortOrder || 0, // 使用计算的排序值
+        })
       }
     }
 
-    // 逐个创建菜单项，避免并行处理可能引起的冲突
+    // 逐个创建菜单项
     for (const newItem of newItems) {
       try {
-        await pb.collection('menu_items').create(newItem)
+        // 尝试安全地添加排序信息
+        let itemToCreate: Record<string, any> = {
+          menu: newItem.menu,
+          dish: newItem.dish,
+        }
+
+        // 检查sortOrder字段是否支持
+        let checkSortOrder = true
+        if (newItems.length === 1) {
+          try {
+            // 获取集合结构信息（这只是一个启发式检查）
+            const schemaCheck = await pb.collection('menu_items').getFullList({
+              limit: 1,
+            })
+            if (schemaCheck.length > 0) {
+              const sampleItem = schemaCheck[0]
+              if ('sortOrder' in sampleItem) {
+                // 添加排序字段
+                itemToCreate = {
+                  ...itemToCreate,
+                  sortOrder: newItem.sortOrder,
+                }
+              } else {
+                console.warn('警告：menu_items集合可能没有sortOrder字段，创建时不包含排序')
+                checkSortOrder = false
+              }
+            }
+          } catch (error) {
+            console.error('检查集合结构失败:', error)
+            // 保险起见，尝试添加排序字段
+            itemToCreate = {
+              ...itemToCreate,
+              sortOrder: newItem.sortOrder,
+            }
+          }
+        } else {
+          // 如果有多个项目，为了效率考虑直接添加排序字段
+          itemToCreate = {
+            ...itemToCreate,
+            sortOrder: newItem.sortOrder,
+          }
+        }
+
+        // 创建菜单项
+        await pb.collection('menu_items').create(itemToCreate)
       } catch (error) {
         console.error('创建菜单项失败:', error)
         errors.push(`创建"${newItem.dish}"菜单项失败`)
-        // 继续处理其他项，不中断流程
+      }
+    }
+
+    // 逐个更新现有菜单项的排序
+    for (const updateItem of updateItems) {
+      try {
+        // 检查是否支持sortOrder
+        let hasField = true
+
+        // 先尝试安全地获取一个项目，看看是否有sortOrder字段
+        if (updateItems.length === 1) {
+          try {
+            const existingItem = await pb.collection('menu_items').getOne(updateItem.id)
+            if (!('sortOrder' in existingItem)) {
+              console.warn('警告：menu_items集合可能没有sortOrder字段，跳过排序更新')
+              hasField = false
+            }
+          } catch (error) {
+            // 如果获取失败，尝试继续执行
+            console.error('检查sortOrder字段时出错:', error)
+          }
+        }
+
+        // 只有在确认有字段时才进行更新
+        if (hasField) {
+          await pb.collection('menu_items').update(updateItem.id, {
+            sortOrder: updateItem.sortOrder,
+          })
+        }
+      } catch (error) {
+        console.error(`更新菜单项排序失败: ${updateItem.id}`, error)
+        errors.push(`更新菜单项排序失败`)
       }
     }
 
@@ -727,13 +957,17 @@ const saveChanges = async () => {
     // 刷新菜单数据
     await menuStore.fetchMenu(menuDate.value, props.mealType)
 
-    // 记录当前编辑的菜单类型
+    // 记录当前编辑的菜单类型和日期
     menuStore.lastEditedType = props.mealType
+    menuStore.updateSelectedDate(menuDate.value)
 
-    // 返回概览页面时带上当前菜单类型参数
+    // 返回概览页面时带上当前菜单类型和日期参数
     router.push({
       path: '/overview',
-      query: { type: props.mealType },
+      query: {
+        type: props.mealType,
+        date: menuDate.value,
+      },
     })
   } catch (error) {
     console.error('保存菜单失败:', error)
@@ -831,22 +1065,78 @@ const savePrice = async () => {
   }
 }
 
-// 添加移动端检测
-const isMobile = ref(window.innerWidth <= 768)
-
-// 监听窗口大小变化
-window.addEventListener('resize', () => {
-  isMobile.value = window.innerWidth <= 768
-})
-
 // 页面加载时初始化数据
 onMounted(async () => {
+  // 检查URL参数中是否有日期参数
+  const dateParam = router.currentRoute.value.query.date as string | undefined
+
+  // 如果URL中有日期参数，使用它；否则使用当前日期
+  if (dateParam) {
+    menuDate.value = dateParam
+    menuStore.updateSelectedDate(dateParam)
+  } else {
+    // 确保使用当前日期
+    const today = getCurrentDate()
+    menuDate.value = today
+    menuStore.updateSelectedDate(today)
+  }
+
   await loadDishes()
   await loadMenuData()
 })
 </script>
 
 <style scoped>
+/* 编辑器容器 */
+.editor-container {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* 编辑器顶部标题区域 */
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.editor-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #303133;
+}
+
+/* 日期选择器布局 */
+.current-date {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.current-date span {
+  color: #606266;
+  font-weight: 500;
+}
+
+/* 菜品管理区域 */
+.dish-search-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.dish-search-section h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #303133;
+}
+
 /* 桌面端优先设计 */
 .editor-container {
   max-width: 1200px;
@@ -861,21 +1151,65 @@ onMounted(async () => {
   flex-direction: column;
 }
 
-.dish-search-section {
-  margin-bottom: 36px;
-  padding: 20px;
-  background-color: #f5f7fa;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+/* 拖拽相关样式 */
+.draggable-table-container {
+  background-color: #fff;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  border: 1px solid #ebeef5;
 }
 
-.dish-search-section h3 {
-  white-space: nowrap;
-  margin: 0;
-  min-width: 80px;
+.draggable-list {
+  width: 100%;
+}
+
+.draggable-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #fff;
+  border-bottom: 1px solid #ebeef5;
+  transition: background-color 0.3s;
+}
+
+.draggable-item:hover {
+  background-color: #f5f7fa;
+}
+
+.draggable-item:last-child {
+  border-bottom: none;
+}
+
+.drag-handle {
+  cursor: grab;
+  color: #909399;
+  display: flex;
+  align-items: center;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.drag-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.dish-name {
+  flex: 1;
+  padding: 0 10px;
+  font-weight: 500;
+}
+
+.dish-price {
+  width: 120px;
+  padding: 0 10px;
+}
+
+.dish-actions {
+  width: 80px;
+  text-align: center;
 }
 
 .dish-search {
@@ -897,17 +1231,14 @@ onMounted(async () => {
 
 .category-cards {
   flex: 1;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 默认显示两列 */
   gap: 20px;
-  justify-content: space-between;
   margin-bottom: 30px;
   overflow-y: auto;
 }
 
 .category-card {
-  flex: 1;
-  min-width: 280px;
   background-color: #f9fafc;
   border-radius: 8px;
   padding: 16px;
@@ -953,6 +1284,13 @@ onMounted(async () => {
   min-width: 100px;
 }
 
+/* 大型显示器 - 可选增加更多列 */
+@media screen and (min-width: 1440px) {
+  .category-cards {
+    grid-template-columns: repeat(3, 1fr); /* 大屏幕显示三列 */
+  }
+}
+
 /* 平板设备 */
 @media screen and (max-width: 1024px) {
   .editor-container {
@@ -967,11 +1305,11 @@ onMounted(async () => {
   }
 
   .category-cards {
+    grid-template-columns: repeat(2, 1fr); /* 平板保持两列 */
     gap: 15px;
   }
 
   .category-card {
-    min-width: 250px;
     padding: 16px;
   }
 
@@ -984,9 +1322,13 @@ onMounted(async () => {
     margin-top: 35px;
     gap: 12px;
   }
+
+  .draggable-item {
+    padding: 8px;
+  }
 }
 
-/* 手机设备 */
+/* 小平板设备 */
 @media screen and (max-width: 768px) {
   .editor-container {
     padding: 20px;
@@ -997,23 +1339,34 @@ onMounted(async () => {
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  .dish-search-section {
-    margin-bottom: 24px;
-    padding: 15px;
+  .editor-header {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .current-date {
+    width: 100%;
+  }
+
+  .dish-search-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .dish-search-section h3 {
+    margin-bottom: 10px;
   }
 
   .category-cards {
-    flex-direction: column;
+    grid-template-columns: 1fr; /* 小平板显示单列 */
     gap: 15px;
     margin-bottom: 20px;
-    padding-bottom: 0;
   }
 
   .category-card {
     width: 100%;
-    min-width: unset;
     padding: 15px;
   }
 
@@ -1042,9 +1395,30 @@ onMounted(async () => {
   .action-buttons :deep(.el-button + .el-button) {
     margin-left: 0 !important;
   }
+
+  .draggable-item {
+    padding: 10px 6px;
+  }
+
+  .dish-name {
+    padding: 0 5px;
+  }
+
+  .dish-price {
+    width: 90px;
+    padding: 0 5px;
+  }
+
+  .dish-actions {
+    width: 70px;
+  }
+
+  .drag-handle {
+    padding: 0 5px;
+  }
 }
 
-/* 小屏手机 */
+/* 手机设备 */
 @media screen and (max-width: 480px) {
   .editor-container {
     padding: 15px;
@@ -1069,6 +1443,29 @@ onMounted(async () => {
 
   .action-buttons {
     margin-top: 20px;
+  }
+
+  .draggable-item {
+    padding: 8px 4px;
+    font-size: 14px;
+  }
+
+  .dish-name {
+    padding: 0 3px;
+  }
+
+  .drag-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .dish-price {
+    width: 80px;
+    padding: 0 3px;
+  }
+
+  .dish-actions {
+    width: 60px;
   }
 }
 

@@ -9,6 +9,7 @@ type MenuState = {
   error: string | null
   lastEditedType: MenuType | null
   lastFetchTime: Record<MenuType, number> // 记录每种菜单类型的最后请求时间
+  selectedDate: string // 当前选择的日期，格式为 YYYY-MM-DD
 }
 
 export const useMenuStore = defineStore('menu', {
@@ -22,6 +23,13 @@ export const useMenuStore = defineStore('menu', {
       dinner: 0,
       other: 0, // 键名改为'other'，在UI中显示为"其他"
     },
+    selectedDate: (() => {
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    })(), // 使用本地时区的日期
   }),
 
   actions: {
@@ -86,6 +94,13 @@ export const useMenuStore = defineStore('menu', {
       } finally {
         this.loading = false
       }
+    },
+
+    /**
+     * 更新选择的日期
+     */
+    updateSelectedDate(date: string) {
+      this.selectedDate = date
     },
   },
 })

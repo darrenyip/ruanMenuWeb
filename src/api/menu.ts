@@ -116,9 +116,10 @@ export const menuApi = {
    * @param date 日期，格式为YYYY-MM-DD
    * @param type 菜单类型：lunch(午餐), dinner(晚餐), other(其他-包含炖汤/主食/饮料)
    * @param dishId 菜品ID
+   * @param sortOrder 可选的排序顺序，默认为0
    * @returns 创建的菜单项数据
    */
-  createMenuItem: async (date: string, type: MenuType, dishId: string) => {
+  createMenuItem: async (date: string, type: MenuType, dishId: string, sortOrder: number = 0) => {
     try {
       // 获取或创建菜单
       const menu = await menuApi.getOrCreateMenu(date, type)
@@ -127,6 +128,7 @@ export const menuApi = {
       const data = {
         menu: menu.id,
         dish: dishId,
+        sortOrder: sortOrder,
       }
 
       const createdMenuItem = await pb.collection('menu_items').create(data)
@@ -165,10 +167,23 @@ export const menuApi = {
       console.log('找到菜单:', menu)
 
       // 2. 查找该菜单下的所有菜单项，并包含菜品信息
-      const menuItems = (await pb.collection('menu_items').getFullList({
-        filter: `menu='${menu.id}'`,
-        expand: 'dish',
-      })) as MenuItem[]
+      let menuItems: MenuItem[] = []
+
+      try {
+        // 首先尝试使用sortOrder字段排序
+        menuItems = (await pb.collection('menu_items').getFullList({
+          filter: `menu='${menu.id}'`,
+          expand: 'dish',
+          sort: 'sortOrder', // 尝试按sortOrder升序排序
+        })) as MenuItem[]
+      } catch (sortError) {
+        console.error('使用sortOrder排序失败，回退到默认排序:', sortError)
+        // 如果排序失败，使用默认排序（通常是按ID或创建时间）
+        menuItems = (await pb.collection('menu_items').getFullList({
+          filter: `menu='${menu.id}'`,
+          expand: 'dish',
+        })) as MenuItem[]
+      }
 
       // 3. 按类别组织数据
       const organizedItems = organizeMenuItemsByCategory(menuItems)
@@ -207,6 +222,87 @@ export const menuApi = {
       throw error
     }
   },
+
+  /**
+   * 修复菜单项排序
+   * 用于历史数据修复，为所有没有sortOrder的菜单项添加sortOrder
+   * @param menuId 菜单ID
+   */
+  fixMenuItemsOrder: async (menuId: string): Promise<void> => {
+    try {
+      // 获取指定菜单的所有菜单项
+      const menuItems = await pb.collection('menu_items').getFullList({
+        filter: `menu='${menuId}'`,
+        expand: 'dish',
+      })
+
+      // 检查sortOrder字段是否存在于schema中
+      let schemaHasSortOrder = true
+      try {
+        // 检查菜单项集合schema中是否有sortOrder字段
+        const schema = await pb.collection('menu_items').getFullList({ limit: 1 })
+        if (schema.length > 0) {
+          const sampleItem = schema[0]
+          // 如果返回的对象中没有sortOrder字段，可能未添加该字段
+          if (!('sortOrder' in sampleItem)) {
+            console.warn('警告: menu_items集合中可能未添加sortOrder字段，请在管理界面添加此字段')
+            schemaHasSortOrder = false
+            return // 如果字段不存在，不执行后续操作
+          }
+        }
+      } catch (schemaError) {
+        console.error('检查schema失败:', schemaError)
+        // 继续尝试更新，即使schema检查失败
+      }
+
+      // 如果schema中没有sortOrder字段，则返回
+      if (!schemaHasSortOrder) {
+        return
+      }
+
+      // 按类别组织菜单项
+      const categorizedItems: Record<string, any[]> = {}
+
+      menuItems.forEach((item) => {
+        if (item.expand?.dish) {
+          const category = item.expand.dish.category
+          if (!categorizedItems[category]) {
+            categorizedItems[category] = []
+          }
+          categorizedItems[category].push(item)
+        }
+      })
+
+      // 为每个类别的菜单项设置sortOrder
+      let globalOrderCounter = 1
+      let updateCount = 0
+      let errorCount = 0
+
+      for (const category in categorizedItems) {
+        for (const item of categorizedItems[category]) {
+          // 如果该项目没有排序顺序，则更新它
+          if (item.sortOrder === undefined || item.sortOrder === null) {
+            try {
+              await pb.collection('menu_items').update(item.id, {
+                sortOrder: globalOrderCounter,
+              })
+              updateCount++
+            } catch (updateError) {
+              console.error(`更新菜单项排序失败: ${item.id}`, updateError)
+              errorCount++
+            }
+          }
+          globalOrderCounter++
+        }
+      }
+
+      console.log(`已修复菜单 ${menuId} 的菜单项排序 (更新: ${updateCount}, 错误: ${errorCount})`)
+    } catch (error) {
+      console.error('修复菜单项排序失败:', error)
+      // 不抛出异常，避免阻止应用程序正常运行
+      console.warn('继续运行，但排序功能可能不可用')
+    }
+  },
 }
 
 /**
@@ -239,6 +335,7 @@ function organizeMenuItemsByCategory(menuItems: MenuItem[]): OrganizedMenuItems 
         hasMultipleSizes: dish.hasMultipleSizes,
         smallPrice: dish.smallPrice,
         largePrice: dish.largePrice,
+        sortOrder: item.sortOrder, // 传递排序信息到前端
       }
 
       // 确保类别存在，然后添加项目
@@ -247,6 +344,16 @@ function organizeMenuItemsByCategory(menuItems: MenuItem[]): OrganizedMenuItems 
       }
     }
   })
+
+  // 对每个分类内的菜品按sortOrder排序
+  for (const category in result) {
+    result[category as CategoryType].sort((a, b) => {
+      // 如果a或b没有sortOrder，给它们一个默认很大的值，让它们排在后面
+      const aOrder = a.sortOrder !== undefined ? a.sortOrder : 1000
+      const bOrder = b.sortOrder !== undefined ? b.sortOrder : 1000
+      return aOrder - bOrder
+    })
+  }
 
   return result
 }
