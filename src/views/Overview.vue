@@ -352,15 +352,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useMenuStore } from '@/stores/menu'
+import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
 import { Edit, Food, Chicken, Dish, Bowl, Goblet, Goods } from '@element-plus/icons-vue'
 import type { MenuType, FormattedMenu } from '@/types/menu'
 
 const router = useRouter()
+const route = useRoute()
 const menuStore = useMenuStore()
+const authStore = useAuthStore()
 
 // 状态管理
 const lunchMenu = ref<FormattedMenu | null>(null)
@@ -514,21 +517,21 @@ const loadMenuData = async (type: MenuType, date: string) => {
   }
 }
 
-// 页面加载时初始化数据
-onMounted(() => {
-  // 检查URL参数中是否有菜单类型
-  const typeParam = router.currentRoute.value.query.type as MenuType | undefined
-  // 检查URL参数中是否有日期参数
-  const dateParam = router.currentRoute.value.query.date as string | undefined
+// 获取当前本地日期的辅助函数
+const getCurrentDate = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
-  // 获取当前本地日期
-  const getCurrentDate = () => {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
+// 初始化数据的函数
+const initializeData = async () => {
+  // 检查URL参数中是否有菜单类型
+  const typeParam = route.query.type as MenuType | undefined
+  // 检查URL参数中是否有日期参数
+  const dateParam = route.query.date as string | undefined
 
   // 如果URL中有日期参数，更新选择的日期，否则使用当前日期
   if (dateParam) {
@@ -550,11 +553,52 @@ onMounted(() => {
     menuStore.lastEditedType = typeParam as MenuType
   }
 
-  // 用一个短暂的延迟加载数据，避免导航和状态更新过程中的重复请求
-  setTimeout(() => {
-    loadAllMenus()
-  }, 50)
+  // 等待下一个事件循环，确保 Vue 状态已同步
+  await nextTick()
+  
+  // 加载菜单数据
+  await loadAllMenus()
+}
+
+// 标记是否已经初始化过
+const isInitialized = ref(false)
+
+// 页面加载时初始化数据
+onMounted(async () => {
+  // 确保认证状态已初始化
+  if (authStore.state.isInitialized && authStore.state.isAuthenticated) {
+    await initializeData()
+    isInitialized.value = true
+  }
 })
+
+// 监听认证状态变化，确保在认证完成后加载数据
+watch(
+  () => authStore.state.isAuthenticated,
+  async (isAuthenticated) => {
+    if (isAuthenticated && !isInitialized.value) {
+      await initializeData()
+      isInitialized.value = true
+    }
+  },
+  { immediate: true }
+)
+
+// 监听路由变化，当返回到 overview 页面时重新加载数据
+watch(
+  () => route.fullPath,
+  async (newPath) => {
+    if ((newPath === '/overview' || newPath.startsWith('/overview?')) && isInitialized.value) {
+      // 检查是否有新的日期参数
+      const dateParam = route.query.date as string | undefined
+      if (dateParam && dateParam !== selectedDate.value) {
+        selectedDate.value = dateParam
+        menuStore.updateSelectedDate(dateParam)
+        await loadAllMenus()
+      }
+    }
+  }
+)
 </script>
 
 <style scoped>
