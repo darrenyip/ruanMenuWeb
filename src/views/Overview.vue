@@ -355,7 +355,6 @@
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useMenuStore } from '@/stores/menu'
-import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
 import { Edit, Food, Chicken, Dish, Bowl, Goblet, Goods } from '@element-plus/icons-vue'
 import type { MenuType, FormattedMenu } from '@/types/menu'
@@ -363,7 +362,6 @@ import type { MenuType, FormattedMenu } from '@/types/menu'
 const router = useRouter()
 const route = useRoute()
 const menuStore = useMenuStore()
-const authStore = useAuthStore()
 
 // 状态管理
 const lunchMenu = ref<FormattedMenu | null>(null)
@@ -560,50 +558,17 @@ const initializeData = async () => {
   await loadAllMenus()
 }
 
-// 标记是否已经初始化过
-const isInitialized = ref(false)
-
 // 页面加载时初始化数据
+// 注意：路由守卫已经确保只有认证用户才能访问此页面，所以无需再次检查认证状态
 onMounted(async () => {
-  // 等待一个微任务周期，确保 authStore 的状态已同步
-  await nextTick()
-  
-  // 如果认证状态已就绪，直接初始化
-  if (authStore.state.isAuthenticated && !isInitialized.value) {
-    await initializeData()
-    isInitialized.value = true
-  }
+  await initializeData()
 })
-
-// 监听认证状态变化，确保在认证完成后加载数据
-watch(
-  () => authStore.state.isAuthenticated,
-  async (isAuthenticated) => {
-    if (isAuthenticated && !isInitialized.value) {
-      await initializeData()
-      isInitialized.value = true
-    }
-  },
-  { immediate: true }
-)
-
-// 额外保护：如果上述逻辑都没能触发初始化，在 store 初始化完成后再尝试一次
-watch(
-  () => authStore.state.isInitialized,
-  async (initialized) => {
-    if (initialized && authStore.state.isAuthenticated && !isInitialized.value) {
-      await initializeData()
-      isInitialized.value = true
-    }
-  },
-  { immediate: true }
-)
 
 // 监听路由变化，当返回到 overview 页面时重新加载数据
 watch(
   () => route.fullPath,
   async (newPath) => {
-    if ((newPath === '/overview' || newPath.startsWith('/overview?')) && isInitialized.value) {
+    if (newPath === '/overview' || newPath.startsWith('/overview?')) {
       // 检查是否有新的日期参数
       const dateParam = route.query.date as string | undefined
       if (dateParam && dateParam !== selectedDate.value) {
