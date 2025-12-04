@@ -565,8 +565,11 @@ const isInitialized = ref(false)
 
 // 页面加载时初始化数据
 onMounted(async () => {
-  // 确保认证状态已初始化
-  if (authStore.state.isInitialized && authStore.state.isAuthenticated) {
+  // 等待一个微任务周期，确保 authStore 的状态已同步
+  await nextTick()
+  
+  // 如果认证状态已就绪，直接初始化
+  if (authStore.state.isAuthenticated && !isInitialized.value) {
     await initializeData()
     isInitialized.value = true
   }
@@ -577,6 +580,18 @@ watch(
   () => authStore.state.isAuthenticated,
   async (isAuthenticated) => {
     if (isAuthenticated && !isInitialized.value) {
+      await initializeData()
+      isInitialized.value = true
+    }
+  },
+  { immediate: true }
+)
+
+// 额外保护：如果上述逻辑都没能触发初始化，在 store 初始化完成后再尝试一次
+watch(
+  () => authStore.state.isInitialized,
+  async (initialized) => {
+    if (initialized && authStore.state.isAuthenticated && !isInitialized.value) {
       await initializeData()
       isInitialized.value = true
     }
