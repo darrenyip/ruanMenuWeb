@@ -63,6 +63,7 @@ export const useMenuStore = defineStore('menu', {
           staple: [],
           soup: [],
           drink: [],
+          combo: [],
         }
 
         this.currentMenu = {

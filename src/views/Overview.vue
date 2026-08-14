@@ -141,6 +141,29 @@
                 </el-table-column>
               </el-table>
             </div>
+
+            <!-- 套餐表格 -->
+            <div class="category-table" v-if="lunchMenu?.items?.combo?.length">
+              <div class="category-header combo">
+                <el-icon><Goods /></el-icon> 套餐
+              </div>
+              <el-table :data="lunchMenu.items.combo" size="small" :show-header="false">
+                <el-table-column prop="name" label="套餐" />
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                      </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                      </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
           </div>
         </div>
       </el-card>
@@ -247,6 +270,29 @@
                     </div>
                   </template>
                 </el-table-column>
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                      </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                      </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+
+            <!-- 套餐表格 -->
+            <div class="category-table" v-if="dinnerMenu?.items?.combo?.length">
+              <div class="category-header combo">
+                <el-icon><Goods /></el-icon> 套餐
+              </div>
+              <el-table :data="dinnerMenu.items.combo" size="small" :show-header="false">
+                <el-table-column prop="name" label="套餐" />
                 <el-table-column label="价格" width="80" align="right">
                   <template #default="{ row }">
                     <div v-if="row.hasMultipleSizes" class="price-display">
@@ -383,6 +429,29 @@
                 </el-table-column>
               </el-table>
             </div>
+
+            <!-- 套餐表格 -->
+            <div class="category-table" v-if="otherMenu?.items?.combo?.length">
+              <div class="category-header combo">
+                <el-icon><Goods /></el-icon> 套餐
+              </div>
+              <el-table :data="otherMenu.items.combo" size="small" :show-header="false">
+                <el-table-column prop="name" label="套餐" />
+                <el-table-column label="价格" width="80" align="right">
+                  <template #default="{ row }">
+                    <div v-if="row.hasMultipleSizes" class="price-display">
+                      <div class="price-item">
+                        <span class="price-label">小:</span> ¥{{ row.smallPrice }}
+                      </div>
+                      <div class="price-item">
+                        <span class="price-label">大:</span> ¥{{ row.largePrice }}
+                      </div>
+                    </div>
+                    <div v-else>¥{{ row.price }}</div>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
           </div>
         </div>
       </el-card>
@@ -391,15 +460,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useMenuStore } from '@/stores/menu'
 import { ElMessage } from 'element-plus'
-import { Edit, Food, Chicken, Dish, Bowl, Goblet } from '@element-plus/icons-vue'
+import { Edit, Food, Chicken, Dish, Bowl, Goblet, Goods } from '@element-plus/icons-vue'
 import type { MenuType, FormattedMenu } from '@/types/menu'
 import samsIcon from '@/assets/images/sams.jpg'
 
 const router = useRouter()
+const route = useRoute()
 const menuStore = useMenuStore()
 
 // 状态管理
@@ -426,7 +496,8 @@ const hasLunchItems = computed(() => {
     !!items &&
     ((items.meat && items.meat.length > 0) ||
       (items.halfMeat && items.halfMeat.length > 0) ||
-      (items.vegetable && items.vegetable.length > 0))
+      (items.vegetable && items.vegetable.length > 0) ||
+      (items.combo && items.combo.length > 0))
   )
 })
 
@@ -436,7 +507,8 @@ const hasDinnerItems = computed(() => {
     !!items &&
     ((items.meat && items.meat.length > 0) ||
       (items.halfMeat && items.halfMeat.length > 0) ||
-      (items.vegetable && items.vegetable.length > 0))
+      (items.vegetable && items.vegetable.length > 0) ||
+      (items.combo && items.combo.length > 0))
   )
 })
 
@@ -446,7 +518,8 @@ const hasOtherItems = computed(() => {
     !!items &&
     ((items.soup && items.soup.length > 0) ||
       (items.staple && items.staple.length > 0) ||
-      (items.drink && items.drink.length > 0))
+      (items.drink && items.drink.length > 0) ||
+      (items.combo && items.combo.length > 0))
   )
 })
 
@@ -551,21 +624,21 @@ const loadMenuData = async (type: MenuType, date: string) => {
   }
 }
 
-// 页面加载时初始化数据
-onMounted(() => {
-  // 检查URL参数中是否有菜单类型
-  const typeParam = router.currentRoute.value.query.type as MenuType | undefined
-  // 检查URL参数中是否有日期参数
-  const dateParam = router.currentRoute.value.query.date as string | undefined
+// 获取当前本地日期的辅助函数
+const getCurrentDate = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
-  // 获取当前本地日期
-  const getCurrentDate = () => {
-    const now = new Date()
-    const year = now.getFullYear()
-    const month = String(now.getMonth() + 1).padStart(2, '0')
-    const day = String(now.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-  }
+// 初始化数据的函数
+const initializeData = async () => {
+  // 检查URL参数中是否有菜单类型
+  const typeParam = route.query.type as MenuType | undefined
+  // 检查URL参数中是否有日期参数
+  const dateParam = route.query.date as string | undefined
 
   // 如果URL中有日期参数，更新选择的日期，否则使用当前日期
   if (dateParam) {
@@ -587,11 +660,34 @@ onMounted(() => {
     menuStore.lastEditedType = typeParam as MenuType
   }
 
-  // 用一个短暂的延迟加载数据，避免导航和状态更新过程中的重复请求
-  setTimeout(() => {
-    loadAllMenus()
-  }, 50)
+  // 等待下一个事件循环，确保 Vue 状态已同步
+  await nextTick()
+  
+  // 加载菜单数据
+  await loadAllMenus()
+}
+
+// 页面加载时初始化数据
+// 注意：路由守卫已经确保只有认证用户才能访问此页面，所以无需再次检查认证状态
+onMounted(async () => {
+  await initializeData()
 })
+
+// 监听路由变化，当返回到 overview 页面时重新加载数据
+watch(
+  () => route.fullPath,
+  async (newPath) => {
+    if (newPath === '/overview' || newPath.startsWith('/overview?')) {
+      // 检查是否有新的日期参数
+      const dateParam = route.query.date as string | undefined
+      if (dateParam && dateParam !== selectedDate.value) {
+        selectedDate.value = dateParam
+        menuStore.updateSelectedDate(dateParam)
+        await loadAllMenus()
+      }
+    }
+  }
+)
 </script>
 
 <style scoped>
@@ -716,6 +812,10 @@ onMounted(() => {
 
 .category-header.drink {
   background-color: #9254de;
+}
+
+.category-header.combo {
+  background-color: #ff85c0;
 }
 
 /* 价格显示样式 */

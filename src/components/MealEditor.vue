@@ -297,6 +297,7 @@ const menuItems = ref<OrganizedMenuItems>({
   staple: [],
   soup: [],
   drink: [],
+  combo: [],
 })
 const allDishes = ref<Dish[]>([])
 const categorySearchQueries = reactive<Record<CategoryType, string>>({
@@ -306,6 +307,7 @@ const categorySearchQueries = reactive<Record<CategoryType, string>>({
   staple: '',
   soup: '',
   drink: '',
+  combo: '',
 })
 const saving = ref(false)
 const menuId = ref('')
@@ -381,6 +383,7 @@ const categoryLabels = {
   staple: '🍚 主食',
   soup: '🥘 炖汤',
   drink: '🥤 饮料',
+  combo: '🍱 套餐',
 }
 
 // 用于下拉选择的分类选项
@@ -391,14 +394,15 @@ const categoryOptions = {
   staple: '主食',
   soup: '炖汤',
   drink: '饮料',
+  combo: '套餐',
 }
 
 // 根据菜单类型显示相关分类
 const visibleCategories = computed(() => {
   if (props.mealType === 'other') {
-    return ['soup', 'staple', 'drink'] as CategoryType[]
+    return ['soup', 'staple', 'drink', 'combo'] as CategoryType[]
   }
-  return ['meat', 'halfMeat', 'vegetable'] as CategoryType[]
+  return ['meat', 'halfMeat', 'vegetable', 'combo'] as CategoryType[]
 })
 
 // 过滤后的分类对象，仅包含可见分类
@@ -445,6 +449,7 @@ const loadMenuData = async () => {
       staple: [],
       soup: [],
       drink: [],
+      combo: [],
     }
     menuId.value = ''
 
@@ -501,6 +506,7 @@ const loadMenuData = async () => {
       staple: [],
       soup: [],
       drink: [],
+      combo: [],
     }
     menuId.value = ''
 
