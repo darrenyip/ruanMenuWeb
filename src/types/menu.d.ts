@@ -20,6 +20,7 @@ export interface Dish extends RecordModel {
   smallPrice?: number
   largePrice?: number
   hasMultipleSizes: boolean
+  isSam?: boolean // 是否使用山姆超市购买的原材料
   description?: string
   created: string
   updated: string
@@ -67,6 +68,7 @@ export interface MenuItemDisplay {
   hasMultipleSizes?: boolean
   smallPrice?: number // 小份价格
   largePrice?: number // 大份价格
+  isSam?: boolean // 是否使用山姆超市购买的原材料
   sortOrder?: number // 排序顺序，用于拖拽排序功能
 }
 

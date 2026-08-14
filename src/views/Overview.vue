@@ -43,7 +43,19 @@
                 <el-icon><Chicken /></el-icon> 荤菜
               </div>
               <el-table :data="lunchMenu.items.meat" size="small" :show-header="false">
-                <el-table-column prop="name" label="菜品" />
+                <el-table-column label="菜品">
+                  <template #default="{ row }">
+                    <div style="display: flex; align-items: center; gap: 4px">
+                      <span>{{ row.name }}</span>
+                      <img
+                        v-if="row.isSam"
+                        :src="samsIcon"
+                        style="width: 20px; height: 20px"
+                        alt="山姆"
+                      />
+                    </div>
+                  </template>
+                </el-table-column>
                 <el-table-column label="价格" width="80" align="right">
                   <template #default="{ row }">
                     <div v-if="row.hasMultipleSizes" class="price-display">
@@ -66,7 +78,19 @@
                 <el-icon><Food /></el-icon> 半荤素
               </div>
               <el-table :data="lunchMenu.items.halfMeat" size="small" :show-header="false">
-                <el-table-column prop="name" label="菜品" />
+                <el-table-column label="菜品">
+                  <template #default="{ row }">
+                    <div style="display: flex; align-items: center; gap: 4px">
+                      <span>{{ row.name }}</span>
+                      <img
+                        v-if="row.isSam"
+                        :src="samsIcon"
+                        style="width: 20px; height: 20px"
+                        alt="山姆"
+                      />
+                    </div>
+                  </template>
+                </el-table-column>
                 <el-table-column label="价格" width="80" align="right">
                   <template #default="{ row }">
                     <div v-if="row.hasMultipleSizes" class="price-display">
@@ -89,7 +113,19 @@
                 <el-icon><Dish /></el-icon> 素菜
               </div>
               <el-table :data="lunchMenu.items.vegetable" size="small" :show-header="false">
-                <el-table-column prop="name" label="菜品" />
+                <el-table-column label="菜品">
+                  <template #default="{ row }">
+                    <div style="display: flex; align-items: center; gap: 4px">
+                      <span>{{ row.name }}</span>
+                      <img
+                        v-if="row.isSam"
+                        :src="samsIcon"
+                        style="width: 20px; height: 20px"
+                        alt="山姆"
+                      />
+                    </div>
+                  </template>
+                </el-table-column>
                 <el-table-column label="价格" width="80" align="right">
                   <template #default="{ row }">
                     <div v-if="row.hasMultipleSizes" class="price-display">
@@ -128,7 +164,19 @@
                 <el-icon><Chicken /></el-icon> 荤菜
               </div>
               <el-table :data="dinnerMenu.items.meat" size="small" :show-header="false">
-                <el-table-column prop="name" label="菜品" />
+                <el-table-column label="菜品">
+                  <template #default="{ row }">
+                    <div style="display: flex; align-items: center; gap: 4px">
+                      <span>{{ row.name }}</span>
+                      <img
+                        v-if="row.isSam"
+                        :src="samsIcon"
+                        style="width: 20px; height: 20px"
+                        alt="山姆"
+                      />
+                    </div>
+                  </template>
+                </el-table-column>
                 <el-table-column label="价格" width="80" align="right">
                   <template #default="{ row }">
                     <div v-if="row.hasMultipleSizes" class="price-display">
@@ -151,7 +199,19 @@
                 <el-icon><Food /></el-icon> 半荤素
               </div>
               <el-table :data="dinnerMenu.items.halfMeat" size="small" :show-header="false">
-                <el-table-column prop="name" label="菜品" />
+                <el-table-column label="菜品">
+                  <template #default="{ row }">
+                    <div style="display: flex; align-items: center; gap: 4px">
+                      <span>{{ row.name }}</span>
+                      <img
+                        v-if="row.isSam"
+                        :src="samsIcon"
+                        style="width: 20px; height: 20px"
+                        alt="山姆"
+                      />
+                    </div>
+                  </template>
+                </el-table-column>
                 <el-table-column label="价格" width="80" align="right">
                   <template #default="{ row }">
                     <div v-if="row.hasMultipleSizes" class="price-display">
@@ -174,7 +234,19 @@
                 <el-icon><Dish /></el-icon> 素菜
               </div>
               <el-table :data="dinnerMenu.items.vegetable" size="small" :show-header="false">
-                <el-table-column prop="name" label="菜品" />
+                <el-table-column label="菜品">
+                  <template #default="{ row }">
+                    <div style="display: flex; align-items: center; gap: 4px">
+                      <span>{{ row.name }}</span>
+                      <img
+                        v-if="row.isSam"
+                        :src="samsIcon"
+                        style="width: 20px; height: 20px"
+                        alt="山姆"
+                      />
+                    </div>
+                  </template>
+                </el-table-column>
                 <el-table-column label="价格" width="80" align="right">
                   <template #default="{ row }">
                     <div v-if="row.hasMultipleSizes" class="price-display">
@@ -213,7 +285,19 @@
                 <el-icon><Bowl /></el-icon> 炖汤
               </div>
               <el-table :data="otherMenu.items.soup" size="small" :show-header="false">
-                <el-table-column prop="name" label="汤品" />
+                <el-table-column label="汤品">
+                  <template #default="{ row }">
+                    <div style="display: flex; align-items: center; gap: 4px">
+                      <span>{{ row.name }}</span>
+                      <img
+                        v-if="row.isSam"
+                        :src="samsIcon"
+                        style="width: 20px; height: 20px"
+                        alt="山姆"
+                      />
+                    </div>
+                  </template>
+                </el-table-column>
                 <el-table-column label="价格" width="80" align="right">
                   <template #default="{ row }">
                     <div v-if="row.hasMultipleSizes" class="price-display">
@@ -236,7 +320,19 @@
                 <el-icon><Bowl /></el-icon> 主食
               </div>
               <el-table :data="otherMenu.items.staple" size="small" :show-header="false">
-                <el-table-column prop="name" label="主食" />
+                <el-table-column label="主食">
+                  <template #default="{ row }">
+                    <div style="display: flex; align-items: center; gap: 4px">
+                      <span>{{ row.name }}</span>
+                      <img
+                        v-if="row.isSam"
+                        :src="samsIcon"
+                        style="width: 20px; height: 20px"
+                        alt="山姆"
+                      />
+                    </div>
+                  </template>
+                </el-table-column>
                 <el-table-column label="价格" width="80" align="right">
                   <template #default="{ row }">
                     <div v-if="row.hasMultipleSizes" class="price-display">
@@ -259,7 +355,19 @@
                 <el-icon><Goblet /></el-icon> 饮料
               </div>
               <el-table :data="otherMenu.items.drink" size="small" :show-header="false">
-                <el-table-column prop="name" label="饮料" />
+                <el-table-column label="饮料">
+                  <template #default="{ row }">
+                    <div style="display: flex; align-items: center; gap: 4px">
+                      <span>{{ row.name }}</span>
+                      <img
+                        v-if="row.isSam"
+                        :src="samsIcon"
+                        style="width: 20px; height: 20px"
+                        alt="山姆"
+                      />
+                    </div>
+                  </template>
+                </el-table-column>
                 <el-table-column label="价格" width="80" align="right">
                   <template #default="{ row }">
                     <div v-if="row.hasMultipleSizes" class="price-display">
@@ -289,6 +397,7 @@ import { useMenuStore } from '@/stores/menu'
 import { ElMessage } from 'element-plus'
 import { Edit, Food, Chicken, Dish, Bowl, Goblet } from '@element-plus/icons-vue'
 import type { MenuType, FormattedMenu } from '@/types/menu'
+import samsIcon from '@/assets/images/sams.jpg'
 
 const router = useRouter()
 const menuStore = useMenuStore()

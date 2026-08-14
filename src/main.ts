@@ -7,6 +7,8 @@ import 'element-plus/dist/index.css'
 
 import App from './App.vue'
 import router from './router'
+// 导入自定义指令
+import { registerDirectives } from './directives'
 
 // 添加移动端viewport控制
 const meta = document.createElement('meta')
@@ -19,5 +21,7 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 app.use(ElementPlus)
+// 注册所有自定义指令
+registerDirectives(app)
 
 app.mount('#app')

@@ -7,7 +7,7 @@
         <el-icon><Plus /></el-icon> 添加菜品
       </el-button>
 
-      <el-input v-model="searchQuery" placeholder="搜索菜品" clearable class="search-input">
+      <el-input v-model="searchQuery" v-trim placeholder="搜索菜品" clearable class="search-input">
         <template #prefix>
           <el-icon><Search /></el-icon>
         </template>
@@ -45,6 +45,12 @@
             <el-tag :type="getCategoryTag(row.category)">
               {{ getCategoryLabel(row.category) }}
             </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="山姆" width="60">
+          <template #default="{ row }">
+            <el-tag v-if="row.isSam" type="primary" size="small">山姆</el-tag>
+            <span v-else style="color: #909399">-</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" :width="isMobile ? '80' : '150'" fixed="right">
@@ -115,7 +121,7 @@
         ref="dishFormRef"
       >
         <el-form-item label="菜品名称" prop="name">
-          <el-input v-model="dishForm.name" placeholder="请输入菜品名称" />
+          <el-input v-model="dishForm.name" v-trim placeholder="请输入菜品名称" />
         </el-form-item>
 
         <el-form-item label="分类" prop="category">
@@ -149,8 +155,15 @@
           </el-form-item>
         </template>
 
+        <el-form-item label="山姆采购">
+          <el-switch v-model="dishForm.isSam" />
+          <span style="margin-left: 10px; color: #909399; font-size: 12px">
+            使用山姆超市购买的原材料
+          </span>
+        </el-form-item>
+
         <el-form-item label="描述">
-          <el-input v-model="dishForm.description" type="textarea" placeholder="可选描述" />
+          <el-input v-model="dishForm.description" v-trim type="textarea" placeholder="可选描述" />
         </el-form-item>
       </el-form>
 
@@ -215,6 +228,7 @@ const dishForm = reactive({
   smallPrice: 0,
   largePrice: 0,
   hasMultipleSizes: false,
+  isSam: false,
   description: '',
 })
 
@@ -314,6 +328,7 @@ const addNewDish = () => {
     smallPrice: 0,
     largePrice: 0,
     hasMultipleSizes: false,
+    isSam: false,
     description: '',
   })
   dialogVisible.value = true
@@ -331,6 +346,7 @@ const editDish = (dish: Dish) => {
     smallPrice: dish.smallPrice || 0,
     largePrice: dish.largePrice || 0,
     hasMultipleSizes: dish.hasMultipleSizes,
+    isSam: dish.isSam || false,
     description: dish.description || '',
   })
   dialogVisible.value = true
@@ -383,6 +399,7 @@ const saveDish = async () => {
           smallPrice: dishForm.hasMultipleSizes ? dishForm.smallPrice : undefined,
           largePrice: dishForm.hasMultipleSizes ? dishForm.largePrice : undefined,
           hasMultipleSizes: dishForm.hasMultipleSizes,
+          isSam: dishForm.isSam,
           description: dishForm.description || undefined,
         }
 

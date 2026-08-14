@@ -8,11 +8,16 @@
       <!-- 添加 ref 到 el-form -->
       <el-form ref="loginForm" :model="form" label-width="80px">
         <el-form-item label="账号" prop="identity">
-          <el-input v-model="form.identity" placeholder="邮箱或用户名" @keyup.enter="handleLogin" />
+          <el-input
+            v-model="form.identity"
+            v-trim
+            placeholder="邮箱或用户名"
+            @keyup.enter="handleLogin"
+          />
         </el-form-item>
 
         <el-form-item label="密码" prop="password">
-          <el-input v-model="form.password" type="password" @keyup.enter="handleLogin" />
+          <el-input v-model="form.password" v-trim type="password" @keyup.enter="handleLogin" />
         </el-form-item>
 
         <el-form-item>
